@@ -1,0 +1,51 @@
+dist: trusty
+sudo: false
+language: node_js
+node_js:
+  - "6"
+os:
+  - linux
+cache: yarn
+env:
+  - FIREFOX_VERSION="latest"
+  - FIREFOX_VERSION="59.0.2"
+
+before_install:
+  # Install firefox for testing.
+  - echo $FIREFOX_VERSION
+  - export FIREFOX_SOURCE_URL='https://download.mozilla.org/?product=firefox-'$FIREFOX_VERSION'&lang=en-US&os=linux64'
+  - wget --no-verbose -O /tmp/firefox-$FIREFOX_VERSION.tar.bz2 $FIREFOX_SOURCE_URL
+  - mkdir /tmp/firefox-$FIREFOX_VERSION
+  - tar -xvf /tmp/firefox-$FIREFOX_VERSION.tar.bz2 -C /tmp/firefox-$FIREFOX_VERSION
+  - export PATH=/tmp/firefox-$FIREFOX_VERSION/firefox:$PATH
+  # Use a virtual display.
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
+  # Install latest chrome.
+  - export CHROME_BIN=/usr/bin/google-chrome
+  # Use newer Yarn version
+  - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.3.2
+  - export PATH="$HOME/.yarn/bin:$PATH"
+  - sudo apt-get update
+  - sudo apt-get install -y libappindicator1 fonts-liberation google-chrome-stable
+install:
+  - yarn install
+script:
+  - npm run lint
+  - firefox --version
+  - npm run test:once
+  - npm run packagr
+
+# deployment
+after_success:
+  - cd dist/
+deploy:
+  skip_cleanup: true # stay in working dir (dist/)
+  provider: npm
+  email: franz.becker@itemis.de
+  api_key:
+    secure: mZEbFq2eeVDqhAIDbRH2QxiHCThXxna8cvaRJtPeRkFTaC6noKllI+4flSUiGFK58eZ5fkLOzEmI1tXiRQo7taYLd44/9sZSGQEURb8N7hCHCZrfxIE4+ZEia9BcyV+anEZ3mzHQ/W4HLV62E21hNRIHU6TWzwgL+ro1dg9PZzF6lEPzLBcjKHkJ60JDzPGNB/1eWjqUC/Pz+U6PfG70gGS1TEL7xi8Cj0EHP12JjkrnprT759FmVgcLQEZQOgPiyVBAveK5haCmihDRgQVPPsWBopCAgxqfXvm9x7yJXw/usY5QG4Z7V1rlrZqgCKn5L28X+BskPZ0ycTEBgvMSrs754BqIioTOgeZBmmSWOvSjseen6UmhlY1Fw3lqKeB09W8HYWtSIL/2DPVI88/QycvMDWPk5ji3NpJp/LX/8xtkH8bEhffvIlll5xBX10vNHde4qyfw5+6g3xNZ8SBn5LUyOjDyMs2DnZ3IjC8v42xhpx67nhfHtM5yf+HlmpEBb0GgRFO4r92vgUItYj7/bLGxKqXkqLhODxiumQCt96+RmV7BZ2ZoYWlEKVD/D9R5yPjhsmcMKEeAtgGrN+L+ZGtPs8A/g/o8nAoiUh8F0dMCVWSAf4o3MLgT/wNoDVLL/kJJEyVNvDYNlEWrPTxJ3iJ7OK3Cos96UdRVZYjMha8=
+  on:
+    tags: true
+    repo: test-editor/web-testexec-navigator
+    node: "6"
