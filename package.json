@@ -1,7 +1,7 @@
 {
   "name": "testexec-navigator",
-  "version": "0.0.0",
-  "license": "MIT",
+  "version": "0.1.0",
+  "license": "EPL",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -16,7 +16,8 @@
   "private": true,
   "peerDependencies": {
     "@angular/core": "^5.2.0",
-    "@angular/common": "^5.2.0"
+    "@angular/common": "^5.2.0",
+    "rxjs": "^5.5.0"
   },
   "devDependencies": {
     "@angular/animations": "^5.2.0",
