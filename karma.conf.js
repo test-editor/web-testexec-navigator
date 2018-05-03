@@ -8,6 +8,7 @@ module.exports = function (config) {
     plugins: [
       require('karma-jasmine'),
       require('karma-chrome-launcher'),
+      require('karma-firefox-launcher'),
       require('karma-jasmine-html-reporter'),
       require('karma-coverage-istanbul-reporter'),
       require('@angular/cli/plugins/karma')
@@ -28,13 +29,13 @@ module.exports = function (config) {
         'for legible error messages in some cases (e.g. html template access missing function)',
         'this configuration however is only used when running `karma start`'
       ]
-   },
-    reporters: ['progress', 'kjhtml'],
+    },
+    reporters: ['progress', 'kjhtml', 'coverage-istanbul'],
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
     autoWatch: true,
-    browsers: ['Chrome'],
+    browsers: [ 'Chrome', 'Firefox' ],
     singleRun: false
   });
 };
