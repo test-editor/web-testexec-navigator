@@ -1,5 +1,14 @@
 # web-testexec-navigator
 
+[![NPM version][npm-image]][npm-url]
+[![Build Status][travis-image]][travis-url]
+
+[npm-image]: https://badge.fury.io/js/%40testeditor%2Ftestexec-navigator.svg
+[npm-url]: https://www.npmjs.com/package/@testeditor/testexec-navigator
+[travis-image]: https://travis-ci.org/test-editor/web-testexec-navigator.svg?branch=master
+[travis-url]: https://travis-ci.org/test-editor/web-testexec-navigator
+
+
 Test-Editor test execution navigator gui angular component
 
 # TestexecNavigator
@@ -38,9 +47,15 @@ Run `npm run lint` to execute the linter for the project.
 
 Run `npm run packagr` to bundle the library into the dist folder via [ng-packagr](https://www.npmjs.com/package/ng-packagr)
 
-## Publishing the library
+## Release process
 
-Run `npm publish dist` (given that you are logged in via `npm login`).
+In order to create a release, the version needs to be increased and tagged. This is done easily using `npm version`, for example:
+
+```
+npm version minor
+```
+
+After the commit and tag is pushed Travis will automatically deploy the tagged version.
 
 ## Further help
 
