@@ -6,13 +6,18 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build --prod",
-    "test": "ng test",
-    "test:once": "ng test --single-run",
+    "test": "ng test -sm=false",
+    "test:once": "ng test -sm=false --single-run",
     "lint": "ng lint",
     "pree2e": "webdriver-manager update --ignore_ssl",
     "e2e": "ng e2e -wu false",
     "packagr": "ng-packagr -p ng-package.json"
   },
+  "COMMENT_scripts_test": [
+    "as described in issue https://github.com/angular/angular-cli/issues/7296",
+    "source maps have to be turned off for ng cli (-sm=false)",
+    "for legible error messages in some cases (e.g. html template access missing function)"
+  ],
   "private": true,
   "peerDependencies": {
     "@angular/core": "^5.2.0",

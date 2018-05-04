@@ -20,8 +20,15 @@ module.exports = function (config) {
       fixWebpackSourcePaths: true
     },
     angularCli: {
-      environment: 'dev'
-    },
+      environment: 'dev',
+      sourcemaps: false,
+      COMMENT_on_sourcemaps: [
+        'as described in issue https://github.com/angular/angular-cli/issues/7296',
+        'source maps have to be turned off for ng cli in face of karma tests',
+        'for legible error messages in some cases (e.g. html template access missing function)',
+        'this configuration however is only used when running `karma start`'
+      ]
+   },
     reporters: ['progress', 'kjhtml'],
     port: 9876,
     colors: true,
