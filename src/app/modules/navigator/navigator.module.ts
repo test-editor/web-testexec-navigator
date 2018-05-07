@@ -1,10 +1,14 @@
-import { NgModule } from '@angular/core';
+import { NgModule, ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigatorComponent } from './navigator.component';
+import { TestCaseServiceModule } from '../test-case-service/test-case-service.module';
+import { TestCaseServiceConfig } from '../test-case-service/test-case-service-config';
+import { TreeViewerModule } from '../tree-viewer/tree-viewer.module';
 
 @NgModule({
   imports: [
-    CommonModule
+    CommonModule,
+    TreeViewerModule
   ],
   declarations: [
     NavigatorComponent
@@ -13,4 +17,13 @@ import { NavigatorComponent } from './navigator.component';
     NavigatorComponent
   ]
 })
-export class NavigatorModule { }
+export class NavigatorModule {
+  static forRoot(testCaseServiceConfig: TestCaseServiceConfig): ModuleWithProviders {
+    return {
+      ngModule: NavigatorModule,
+      providers: [
+        TestCaseServiceModule.forRoot(testCaseServiceConfig).providers,
+      ]
+    };
+  }
+}
