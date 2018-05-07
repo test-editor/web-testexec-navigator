@@ -2,51 +2,42 @@ dist: trusty
 sudo: false
 language: node_js
 node_js:
-  - "9"
+- '9'
 os:
-  - linux
+- linux
 cache: yarn
 env:
-  - FIREFOX_VERSION="latest"
-  - FIREFOX_VERSION="59.0.2"
-
+- FIREFOX_VERSION="latest"
+- FIREFOX_VERSION="59.0.2"
 before_install:
-  # Install firefox for testing.
-  - echo $FIREFOX_VERSION
-  - export FIREFOX_SOURCE_URL='https://download.mozilla.org/?product=firefox-'$FIREFOX_VERSION'&lang=en-US&os=linux64'
-  - wget --no-verbose -O /tmp/firefox-$FIREFOX_VERSION.tar.bz2 $FIREFOX_SOURCE_URL
-  - mkdir /tmp/firefox-$FIREFOX_VERSION
-  - tar -xvf /tmp/firefox-$FIREFOX_VERSION.tar.bz2 -C /tmp/firefox-$FIREFOX_VERSION
-  - export PATH=/tmp/firefox-$FIREFOX_VERSION/firefox:$PATH
-  # Use a virtual display.
-  - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
-  # Install latest chrome.
-  - export CHROME_BIN=/usr/bin/google-chrome
-  # Use newer Yarn version
-  - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.6.0
-  - export PATH="$HOME/.yarn/bin:$PATH"
-  - sudo apt-get update
-  - sudo apt-get install -y libappindicator1 fonts-liberation google-chrome-stable
+- echo $FIREFOX_VERSION
+- export FIREFOX_SOURCE_URL='https://download.mozilla.org/?product=firefox-'$FIREFOX_VERSION'&lang=en-US&os=linux64'
+- wget --no-verbose -O /tmp/firefox-$FIREFOX_VERSION.tar.bz2 $FIREFOX_SOURCE_URL
+- mkdir /tmp/firefox-$FIREFOX_VERSION
+- tar -xvf /tmp/firefox-$FIREFOX_VERSION.tar.bz2 -C /tmp/firefox-$FIREFOX_VERSION
+- export PATH=/tmp/firefox-$FIREFOX_VERSION/firefox:$PATH
+- export DISPLAY=:99.0
+- sh -e /etc/init.d/xvfb start
+- export CHROME_BIN=/usr/bin/google-chrome
+- curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.6.0
+- export PATH="$HOME/.yarn/bin:$PATH"
+- sudo apt-get update
+- sudo apt-get install -y libappindicator1 fonts-liberation google-chrome-stable
 install:
-  - yarn install
+- yarn install
 script:
-  - firefox --version
-  - npm run lint
-  - npm run test:once
-  - npm run e2e
-  - npm run packagr
-
-# deployment
+- firefox --version
+- npm run lint
+- npm run test:once
+- npm run e2e
+- npm run packagr
 after_success:
-  - cd dist/
+- cd dist/
 deploy:
-  skip_cleanup: true # stay in working dir (dist/)
   provider: npm
-  email: franz.becker@itemis.de
+  email: gunther.bachmann@itemis.de
   api_key:
-    secure: mZEbFq2eeVDqhAIDbRH2QxiHCThXxna8cvaRJtPeRkFTaC6noKllI+4flSUiGFK58eZ5fkLOzEmI1tXiRQo7taYLd44/9sZSGQEURb8N7hCHCZrfxIE4+ZEia9BcyV+anEZ3mzHQ/W4HLV62E21hNRIHU6TWzwgL+ro1dg9PZzF6lEPzLBcjKHkJ60JDzPGNB/1eWjqUC/Pz+U6PfG70gGS1TEL7xi8Cj0EHP12JjkrnprT759FmVgcLQEZQOgPiyVBAveK5haCmihDRgQVPPsWBopCAgxqfXvm9x7yJXw/usY5QG4Z7V1rlrZqgCKn5L28X+BskPZ0ycTEBgvMSrs754BqIioTOgeZBmmSWOvSjseen6UmhlY1Fw3lqKeB09W8HYWtSIL/2DPVI88/QycvMDWPk5ji3NpJp/LX/8xtkH8bEhffvIlll5xBX10vNHde4qyfw5+6g3xNZ8SBn5LUyOjDyMs2DnZ3IjC8v42xhpx67nhfHtM5yf+HlmpEBb0GgRFO4r92vgUItYj7/bLGxKqXkqLhODxiumQCt96+RmV7BZ2ZoYWlEKVD/D9R5yPjhsmcMKEeAtgGrN+L+ZGtPs8A/g/o8nAoiUh8F0dMCVWSAf4o3MLgT/wNoDVLL/kJJEyVNvDYNlEWrPTxJ3iJ7OK3Cos96UdRVZYjMha8=
+    secure: ML215iklUZUYYo6v+n0FAgvbDgkuwoDMTVqT4/DTegmFgGttq6oUuJONZUygibnh0fcsnv5kS/fWTqbxh4iFVHqzarOAaF1judY4tJs/f+8kZHu6OQVAM+GYyMqHu5OLD1F0XdwyI6EDjgvpHcDIL35S59GHrZngNn6VCKfo/W0Uz7TjcOqfyJEYHd/ny2BHddULIdd9ZuhVFApdEIyeo3HUSOUCegWZIPWRSTdY9Yt2OS4YAy+x9Mj3k9VBY9bIuRBQV+w22beQKHWR3DHa+D9oVdDOncn4tvcdYiOZQrLB8SleCbi1HmB3pX4FXrAw+Fm5bmLmtsKR25FU12kVeFRQWny3IpIZvSauIDLLdtcbdX8tGsfBQYATDoSn9PXNPQFPF/fJG9vmrwZIZnvCykET2h/9iuMdICnDEBEzqTpTNK17sOkOHlqv2CCl3yoCSisazfPsC76On4Ub0rOZNZ6JiWCNJEk+iSEhSGxl0SzDA7XI/amex8YD2m4xFBHyhsYpn+9wu38j08aYHBOouyYwy4Tb6TJih2stSMqj1WiOSITMKsIZgEGiP1qfm02/ckeZerPDQOY8ydALcVDVjcJRe01Tdz2QpIg/UGbKwxWiY3SMKmIsEp3l2Bh3F1gE8khBoB/q1sK2brvhkNpz2r5/uQQbG/axH93H5jAw/34=
   on:
     tags: true
     repo: test-editor/web-testexec-navigator
-    node: "9"
