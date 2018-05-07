@@ -7,9 +7,10 @@ import { MessagingService } from '@testeditor/messaging-service';
 const HTTP_CLIENT_NEEDED = 'httpClient.needed';
 const HTTP_CLIENT_SUPPLIED = 'httpClient.supplied';
 
-export class CallTree {
+// API provided by service backend
+export class CallTreeNode {
   displayName: string;
-  children: CallTree[];
+  children: CallTreeNode[];
 }
 
 export abstract class TestCaseService {
@@ -31,10 +32,10 @@ export class DefaultTestCaseService extends TestCaseService {
   }
 
   getCallTree(path: string,
-              onResponse?: (status: CallTree) => void,
+              onResponse?: (status: CallTreeNode) => void,
               onError?: (error: any) => void): void {
     this.httpClientExecute(httpClient => {
-      return httpClient.get<CallTree>(this.getURL(path, DefaultTestCaseService.callTreeURLPath))
+      return httpClient.get<CallTreeNode>(this.getURL(path, DefaultTestCaseService.callTreeURLPath))
         .toPromise();
     },
     onResponse,

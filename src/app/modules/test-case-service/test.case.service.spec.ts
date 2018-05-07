@@ -1,7 +1,7 @@
 import { TestBed, inject, fakeAsync } from '@angular/core/testing';
 
-import { DefaultTestCaseService, TestCaseService } from './default-test-case-service';
-import { TestCaseServiceConfig } from './test-case-service-config';
+import { DefaultTestCaseService, TestCaseService } from './default.test.case.service';
+import { TestCaseServiceConfig } from './test.case.service.config';
 import { MessagingService, MessagingModule } from '@testeditor/messaging-service';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
@@ -46,7 +46,7 @@ describe('TestCaseService', () => {
     (httpMock: HttpTestingController, testCaseService: TestCaseService) => {
     // given
     const tclFilePath = 'path/to/file?.tcl';
-    const mockResponse = { displayName: '', children: [] };
+    const expectedCallTreeNode = { displayName: 'my-root-node', children: [] };
     const expectedRequest = {
       method: 'GET',
       url: serviceConfig.testCaseServiceUrl + '/test-case/call-tree?resource=path/to/file%3F.tcl'
@@ -57,10 +57,10 @@ describe('TestCaseService', () => {
 
       // then
       response => {
-        expect(response).toEqual(mockResponse);
+        expect(response).toEqual(expectedCallTreeNode);
       });
 
-    httpMock.match(expectedRequest)[0].flush(mockResponse);
+    httpMock.match(expectedRequest)[0].flush(expectedCallTreeNode);
   })));
 
 });

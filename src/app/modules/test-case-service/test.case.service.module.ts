@@ -1,17 +1,17 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TestCaseServiceConfig } from './test-case-service-config';
-import { DefaultTestCaseService, TestCaseService, CallTree } from './default-test-case-service';
+import { TestCaseServiceConfig } from './test.case.service.config';
+import { DefaultTestCaseService, TestCaseService, CallTreeNode } from './default.test.case.service';
 
 @NgModule({
   imports: [
     CommonModule,
   ],
   declarations: [
-    DefaultTestCaseService, CallTree
+    DefaultTestCaseService, CallTreeNode
   ],
   exports: [
-    DefaultTestCaseService, CallTree
+    DefaultTestCaseService, CallTreeNode
   ]
 })
 export class TestCaseServiceModule {
