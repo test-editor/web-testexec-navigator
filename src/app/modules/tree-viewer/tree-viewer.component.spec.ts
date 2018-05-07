@@ -13,14 +13,14 @@ describe('TreeViewerComponent', () => {
   const singleEmptyTreeNode: () => TreeNode = () => ({
     name: 'tree node',
     children: [],
-    leafStyle: 'fa-file'
+    leafCssClasses: 'fa-file'
   });
 
   const treeNodeWithSubNodes: () => TreeNode = () => ({
     name: 'parent node',
-    collapsedStyle: 'fa-chevron-right',
-    expandedStyle: 'fa-chevron-down',
-    leafStyle: 'fa-folder',
+    collapsedCssClasses: 'fa-chevron-right',
+    expandedCssClasses: 'fa-chevron-down',
+    leafCssClasses: 'fa-folder',
     expanded: false,
     children: [
       { name: 'child node 1', children: [] },
@@ -36,7 +36,7 @@ describe('TreeViewerComponent', () => {
     .compileComponents();
   }));
 
-  function getItemKey(): DebugElement {
+  function getRootTreeViewItemKey(): DebugElement {
     return fixture.debugElement.query(By.css('.tree-view .tree-view-item-key'));
   }
 
@@ -51,7 +51,7 @@ describe('TreeViewerComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('folded folder does not display sub elements', fakeAsync(() => {
+  it('hides sub elements of collapsed node', fakeAsync(() => {
     // given
     component.model = treeNodeWithSubNodes();
 
@@ -66,7 +66,7 @@ describe('TreeViewerComponent', () => {
     expect(treeitems[0].nativeElement.innerText).toContain('parent node');
   }));
 
-  it('expands folder when UI state is set', fakeAsync(() => {
+  it('shows sub elements of expanded noded', fakeAsync(() => {
     // given
     component.model = treeNodeWithSubNodes();
 
@@ -94,14 +94,14 @@ describe('TreeViewerComponent', () => {
     fixture.detectChanges();
 
     // when
-    getItemKey().triggerEventHandler('dblclick', null);
+    getRootTreeViewItemKey().triggerEventHandler('dblclick', null);
 
     // then
     expect(component.model.expanded).toBeDefined();
     expect(component.model.expanded).toBeTruthy();
   });
 
-  it('it uses model`s leaf style when expanded is undefined', () => {
+  it('uses model`s leaf style when expanded is undefined', () => {
     // given
     const treeNode = singleEmptyTreeNode();
     component.model = treeNode;
@@ -110,11 +110,11 @@ describe('TreeViewerComponent', () => {
     fixture.detectChanges();
 
     // then
-    const icon = getItemKey().query(By.css('.icon-type'));
-    expect(icon.classes[treeNode.leafStyle]).toBeTruthy();
+    const icon = getRootTreeViewItemKey().query(By.css('.icon-type'));
+    expect(icon.classes[treeNode.leafCssClasses]).toBeTruthy();
   });
 
-  it('it uses model`s collapsed style when unexpanded', () => {
+  it('uses model`s collapsed style when unexpanded', () => {
     // given
     const treeNode = treeNodeWithSubNodes();
     component.model = treeNode;
@@ -123,11 +123,11 @@ describe('TreeViewerComponent', () => {
     fixture.detectChanges();
 
     // then
-    const icon = getItemKey().query(By.css('.icon-type'));
-    expect(icon.classes[treeNode.collapsedStyle]).toBeTruthy();
+    const icon = getRootTreeViewItemKey().query(By.css('.icon-type'));
+    expect(icon.classes[treeNode.collapsedCssClasses]).toBeTruthy();
   });
 
-  it('it uses model`s expanded style when expanded', () => {
+  it('uses model`s expanded style when expanded', () => {
     // given
     const treeNode = treeNodeWithSubNodes();
     treeNode.expanded = true;
@@ -137,8 +137,8 @@ describe('TreeViewerComponent', () => {
     fixture.detectChanges();
 
     // then
-    const icon = getItemKey().query(By.css('.icon-type'));
-    expect(icon.classes[treeNode.expandedStyle]).toBeTruthy();
+    const icon = getRootTreeViewItemKey().query(By.css('.icon-type'));
+    expect(icon.classes[treeNode.expandedCssClasses]).toBeTruthy();
   });
 
   it('performs configured action when icon is clicked', () => {
@@ -148,7 +148,7 @@ describe('TreeViewerComponent', () => {
       onIconClick: (node) => node.expanded = true
     };
     fixture.detectChanges();
-    const icon = getItemKey().query(By.css('.icon-type'));
+    const icon = getRootTreeViewItemKey().query(By.css('.icon-type'));
 
     // when
     icon.triggerEventHandler('click', null);
@@ -168,7 +168,7 @@ describe('TreeViewerComponent', () => {
     fixture.detectChanges();
 
     // when
-    getItemKey().triggerEventHandler('click', null);
+    getRootTreeViewItemKey().triggerEventHandler('click', null);
 
     // then
     expect(hasBeenClicked).toBeTruthy();
@@ -179,14 +179,14 @@ describe('TreeViewerComponent', () => {
     component.model = singleEmptyTreeNode();
 
     fixture.detectChanges();
-    expect(getItemKey().classes.active).toBeFalsy();
+    expect(getRootTreeViewItemKey().classes.active).toBeFalsy();
 
     // when
     component.model.active = true;
     fixture.detectChanges();
 
     // then
-    expect(getItemKey().classes.active).toBeTruthy();
+    expect(getRootTreeViewItemKey().classes.active).toBeTruthy();
   });
 
   it('has css class "selected" if given by the model state', () => {
@@ -194,14 +194,14 @@ describe('TreeViewerComponent', () => {
     component.model = singleEmptyTreeNode();
 
     fixture.detectChanges();
-    expect(getItemKey().classes.selected).toBeFalsy();
+    expect(getRootTreeViewItemKey().classes.selected).toBeFalsy();
 
     // when
     component.model.selected = true;
     fixture.detectChanges();
 
     // then
-    expect(getItemKey().classes.selected).toBeTruthy();
+    expect(getRootTreeViewItemKey().classes.selected).toBeTruthy();
   });
 
 });

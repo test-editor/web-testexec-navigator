@@ -21,9 +21,9 @@ export class TreeViewerComponent implements OnInit {
   get icon(): string {
     if (this.model) {
       switch (this.model.expanded) {
-        case undefined: return this.model.leafStyle;
-        case true: return this.model.expandedStyle;
-        case false: return this.model.collapsedStyle;
+        case undefined: return this.model.leafCssClasses;
+        case true: return this.model.expandedCssClasses;
+        case false: return this.model.collapsedCssClasses;
       }
     } else {
       return 'fa-question';

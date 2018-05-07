@@ -4,7 +4,7 @@ export interface TreeNode {
   active?: boolean;
   selected?: boolean;
   expanded?: boolean;
-  expandedStyle?: string;
-  collapsedStyle?: string;
-  leafStyle?: string;
+  expandedCssClasses?: string;
+  collapsedCssClasses?: string;
+  leafCssClasses?: string;
 }
