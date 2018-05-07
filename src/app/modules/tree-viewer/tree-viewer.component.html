@@ -1,0 +1,26 @@
+<div class="tree-view" *ngIf="model">
+  <div class="tree-view-item">
+    <div
+      class="tree-view-item-key"
+      (click)="config.onClick(model)"
+      (dblclick)="config.onDoubleClick(model)"
+      [style.padding-left]="level * 12 + 'px'"
+      [ngClass]="{
+        'active': model.active,
+        'header': level == 0,
+        'selected': model.selected
+      }"
+    >
+      <div class="tree-view-element">
+        <span class="icon-type fa" [ngClass]="icon" (click)="config.onIconClick(model)">
+        </span>
+        <span title="{{model.name}}">{{model.name}}</span>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="model.expanded">
+    <div *ngFor="let child of model.children">
+      <app-tree-viewer [model]="child" [level]="level + 1"></app-tree-viewer>
+    </div>
+  </div>
+</div>
