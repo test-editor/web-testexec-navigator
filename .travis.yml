@@ -34,9 +34,10 @@ after_success:
 - npm run packagr
 before_deploy:
 - touch .npmignore
+- cd dist/
 deploy:
-  provider: script
-  script: npm publish dist
+  skip_cleanup: true
+  provider: npm
   email: service.eng@akquinet.de
   api_key:
     secure: cZgnTNG+qoXmz6q6Ga976e+WBzhr9s2dR+lrXvJrZdEz8WkLL/8Mb8Yz5xXI23L5vk4qJ4qPSAdClrCu8InLFBqkmkAZ4PRf3ZlU5USRvhCduYQxpwO+r461Jm2hAlAau/X9CkOyPUkMp+AMesbocxAJfPGTo/loJheLJmLFwJK9vbNv1mX+UhPKuJp5hLJi9SUqceqH27+y6LN/Rx+zALoDRIJT2Whf0+vOLAoiJ5qGY+TMOH2eBUzBkFKhXb2kxrEafvE8ND9NozXaxJ1NNOTWU9WaG6K4x2YuUK+XhU1DhNzU9Jr3Y35DxBfXJsQjaKVZT+P4YMngE0hVdx50GvCTfg8PV4PLKC7RB7LjYlhCeqd0IZDIyMysAIwvva89dFFTBOjULiZfgibcdwvMSIFjAmhKxTIzUuevups/gpyck4fT4O0krK4ChzRStiqzTPnqf2kMVjmfYkjN6eDYrr5Ez0qaTpKnX0QV5WL96LiDzL02qtvOvA+7ZyDvDYV+94jkgHTcVvM65UznOe+2y+TtDOTkef2OB+vJ26gtnwQzF0kkld8cf8TFpFgRMakedyLpq0wKRvKZVSwdJrIJ67iK441UMOBiMXlZCsvirrIxvfK0/2DXg0hrGDsdTMBSgB3pgYEy5lc1KcqJW7Sr1+nL52alivcIk3MKvwM9sFc=
