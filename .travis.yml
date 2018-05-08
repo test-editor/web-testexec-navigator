@@ -31,6 +31,8 @@ script:
 - npm run test:once
 - npm run e2e
 - npm run packagr
+before_deploy:
+- cd dist/
 deploy:
   provider: npm
   email: service.eng@akquinet.de
@@ -39,3 +41,5 @@ deploy:
   on:
     tags: true
     repo: test-editor/web-testexec-navigator
+after_deploy:
+- cd ..
