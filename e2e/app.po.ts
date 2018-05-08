@@ -5,7 +5,7 @@ export class AppPage {
     return browser.get('/');
   }
 
-  getParagraphText() {
-    return element(by.xpath('//p')).getText();
+  getRootNode() {
+    return element(by.xpath('//span[@title="root"]')).getText();
   }
 }

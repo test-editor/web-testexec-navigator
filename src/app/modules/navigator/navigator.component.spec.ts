@@ -1,6 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { NavigatorComponent } from './navigator.component';
+import { TreeViewerComponent } from '../tree-viewer/tree-viewer.component';
 
 describe('NavigatorComponent', () => {
   let component: NavigatorComponent;
@@ -8,7 +9,10 @@ describe('NavigatorComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ NavigatorComponent ]
+      declarations: [
+        NavigatorComponent,
+        TreeViewerComponent
+      ]
     })
     .compileComponents();
   }));

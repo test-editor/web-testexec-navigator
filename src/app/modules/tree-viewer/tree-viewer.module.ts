@@ -6,6 +6,11 @@ import { TreeViewerComponent } from './tree-viewer.component';
   imports: [
     CommonModule
   ],
-  declarations: [TreeViewerComponent]
+  declarations: [
+    TreeViewerComponent
+  ],
+  exports: [
+    TreeViewerComponent
+  ]
 })
 export class TreeViewerModule { }

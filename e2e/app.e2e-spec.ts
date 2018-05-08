@@ -7,8 +7,8 @@ describe('testexec-navigator App', () => {
     page = new AppPage();
   });
 
-  it('should display welcome message', () => {
+  it('should display sample tree', () => {
     page.navigateTo();
-    expect(page.getParagraphText()).toEqual('navigator works!');
+    expect(page.getRootNode()).toEqual('root');
   });
 });

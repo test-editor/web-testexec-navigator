@@ -1,4 +1,4 @@
-import { TestCaseServiceConfig } from './test-case-service-config';
+import { TestCaseServiceConfig } from './test.case.service.config';
 import { Injectable, Injector } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MessagingService } from '@testeditor/messaging-service';

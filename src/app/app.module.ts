@@ -12,7 +12,7 @@ import { NavigatorModule } from './modules/navigator/navigator.module';
   ],
   imports: [
     BrowserModule,
-    NavigatorModule
+    NavigatorModule.forRoot({ testCaseServiceUrl: 'http://localhost:8080' })
   ],
   providers: [
   ],

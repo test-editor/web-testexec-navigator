@@ -14,16 +14,26 @@ export class NavigatorComponent implements OnInit {
   ngOnInit() {
   }
 
-  getTree(): TreeNode {
-    return { name: 'root', children: [] };
-  }
-
-  getTreeConfig(): TreeViewerConfig {
+  getTreeConfig() {
     return {
       onDoubleClick: (node) => { },
       onIconClick: (node) => { },
       onClick: (node) => { },
     };
+  }
+
+  getTree(): TreeNode {
+    return { name: 'root',
+      expanded: true,
+      children: [ { name: 'child', expanded: true,
+                    collapsedCssClasses: 'fa-chevron-right', expandedCssClasses: 'fa-chevron-down', leafCssClasses: 'fa-folder',
+                    children: [
+                      { name: 'grand-child',
+                        collapsedCssClasses: 'fa-chevron-right', expandedCssClasses: 'fa-chevron-down', leafCssClasses: 'fa-folder',
+                        children: [] }
+                    ] },
+                  { name: 'second-child', children: [] } ],
+             collapsedCssClasses: 'fa-chevron-right', expandedCssClasses: 'fa-chevron-down', leafCssClasses: 'fa-folder' };
   }
 
 }
