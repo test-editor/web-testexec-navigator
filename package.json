@@ -28,7 +28,7 @@
     "prebuild": "npm run clean",
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build --prod",
+    "build": "ng build",
     "test": "ng test -sm=false",
     "test:once": "ng test -sm=false --single-run",
     "lint": "ng lint",
@@ -45,6 +45,9 @@
   "peerDependencies": {
     "@angular/core": "^5.2.0",
     "@angular/common": "^5.2.0",
+    "@testeditor/messaging-service": "^1.0.0",
+    "bootstrap": ">=4.0.0",
+    "font-awesome": ">=4.0.0",
     "rxjs": "^5.5.0"
   },
   "devDependencies": {
@@ -57,6 +60,8 @@
     "@angular/platform-browser": "^5.2.0",
     "@angular/platform-browser-dynamic": "^5.2.0",
     "@angular/router": "^5.2.0",
+    "@testeditor/messaging-service": "^1.0.0",
+    "bootstrap": "4.1.0",
     "core-js": "^2.4.1",
     "rxjs": "^5.5.0",
     "zone.js": "^0.8.19",
@@ -67,6 +72,7 @@
     "@types/jasminewd2": "~2.0.2",
     "@types/node": "~9.6.6",
     "codelyzer": "^4.0.1",
+    "font-awesome": "4.7.0",
     "jasmine-core": "~3.1.0",
     "jasmine-spec-reporter": "~4.2.1",
     "karma": "~2.0.0",
@@ -80,6 +86,7 @@
     "protractor": "~5.3.1",
     "rimraf": "2.6.2",
     "ts-node": "~6.0.1",
+    "ts-mockito": "^2.3.0",
     "tslint": "~5.9.1",
     "typescript": "~2.8.3"
   }

@@ -3,7 +3,8 @@ import { NgModule } from '@angular/core';
 
 
 import { AppComponent } from './app.component';
-import { NavigatorModule } from './modules/navigator/navigator.module';
+import { TestExecNavigatorModule } from './modules/navigator/test.exec.navigator.module';
+import { MessagingService, MessagingModule } from '@testeditor/messaging-service';
 
 
 @NgModule({
@@ -12,7 +13,8 @@ import { NavigatorModule } from './modules/navigator/navigator.module';
   ],
   imports: [
     BrowserModule,
-    NavigatorModule
+    TestExecNavigatorModule.forRoot({ testCaseServiceUrl: 'http://localhost:8080' }),
+    MessagingModule.forRoot()
   ],
   providers: [
   ],
