@@ -9,6 +9,6 @@ describe('testexec-navigator App', () => {
 
   it('should display sample tree', () => {
     page.navigateTo();
-    expect(page.getRootNode()).toEqual('root');
+    expect(page.getRootNode()).toEqual('<empty>');
   });
 });

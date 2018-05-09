@@ -3,12 +3,14 @@ import { AppComponent } from './app.component';
 import { NavigatorComponent } from './modules/navigator/navigator.component';
 import { TreeViewerComponent } from './modules/tree-viewer/tree-viewer.component';
 import { NavigatorModule } from '../../public_api';
+import { MessagingModule } from '@testeditor/messaging-service';
 
 describe('AppComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       imports: [
-        NavigatorModule.forRoot({ testCaseServiceUrl: 'http://localhost:8080' })
+        NavigatorModule.forRoot({ testCaseServiceUrl: 'http://localhost:8080' }),
+        MessagingModule.forRoot()
       ],
       declarations: [
         AppComponent,
@@ -26,7 +28,7 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.debugElement.nativeElement;
-    expect(compiled.querySelector('div').textContent).toContain('root');
+    expect(compiled.querySelector('div').textContent).toContain('<empty>');
   }));
 
 });

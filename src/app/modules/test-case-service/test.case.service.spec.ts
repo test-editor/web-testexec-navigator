@@ -49,7 +49,7 @@ describe('TestCaseService', () => {
     const expectedCallTreeNode = { displayName: 'my-root-node', children: [] };
     const expectedRequest = {
       method: 'GET',
-      url: serviceConfig.testCaseServiceUrl + '/test-case/call-tree?resource=path/to/file%3F.tcl'
+      url: serviceConfig.testCaseServiceUrl + '/call-tree?resource=path%2Fto%2Ffile%3F.tcl'
     };
 
     // when

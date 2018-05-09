@@ -6,6 +6,6 @@ export class AppPage {
   }
 
   getRootNode() {
-    return element(by.xpath('//span[@title="root"]')).getText();
+    return element(by.xpath('//span[@title="<empty>"]')).getText();
   }
 }

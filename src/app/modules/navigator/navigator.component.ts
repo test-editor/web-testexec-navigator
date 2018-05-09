@@ -20,12 +20,10 @@ const EMPTY_TREE: TreeNode = { name: '<empty>', children: [] };
 export class NavigatorComponent implements OnInit, OnDestroy {
 
   @Output() treeNode: TreeNode = EMPTY_TREE;
-  backendAsked: Boolean = false;
   navigationSubscription: Subscription;
 
   constructor(private messagingService: MessagingService,
-              private testCaseService: TestCaseService,
-              private changeDetectorRef: ChangeDetectorRef) {
+              private testCaseService: TestCaseService) {
   }
 
   ngOnInit() {
@@ -51,23 +49,18 @@ export class NavigatorComponent implements OnInit, OnDestroy {
   }
 
   updateTreeFor(path: string) {
-    if (this.backendAsked) {
-      console.log('backend was already called, skipping this call');
-    } else {
-      console.log('call backend for testexec call tree');
-      this.testCaseService.getCallTree(
-        path,
-        (node) => {
-          console.log('got testexec call tree answer from backend');
-          console.log(node);
-          this.treeNode = this.transformTreeNode(node);
-          // this.changeDetectorRef.markForCheck(); // do this only if necessary
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
-    }
+    console.log('call backend for testexec call tree');
+    this.testCaseService.getCallTree(
+      path,
+      (node) => {
+        console.log('got testexec call tree answer from backend');
+        console.log(node);
+        this.treeNode = this.transformTreeNode(node);
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
   }
 
   private transformTreeNode(serviceNode: CallTreeNode): TreeNode {
