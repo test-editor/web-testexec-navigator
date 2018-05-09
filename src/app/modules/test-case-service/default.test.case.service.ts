@@ -14,7 +14,7 @@ export class CallTreeNode {
 }
 
 export abstract class TestCaseService {
-  abstract getCallTree(path: string, onResponse?: (some: any) => void, onError?: (error: any) => void): void;
+  abstract getCallTree(path: string, onResponse?: (node: CallTreeNode) => void, onError?: (error: any) => void): void;
 }
 
 
@@ -24,7 +24,7 @@ export class DefaultTestCaseService extends TestCaseService {
   private static readonly callTreeURLPath = '/call-tree';
   private serviceUrl: string;
 
-  private cachedHttpClient: HttpClient;
+  private httpClient: HttpClient;
 
   constructor(config: TestCaseServiceConfig, private messagingService: MessagingService) {
     super();
@@ -32,7 +32,7 @@ export class DefaultTestCaseService extends TestCaseService {
   }
 
   getCallTree(path: string,
-              onResponse?: (status: CallTreeNode) => void,
+              onResponse?: (node: CallTreeNode) => void,
               onError?: (error: any) => void): void {
     console.log('DefaultTestCaseService.getCallTree');
     this.httpClientExecute(httpClient => {
@@ -50,22 +50,23 @@ export class DefaultTestCaseService extends TestCaseService {
   private httpClientExecute(onHttpClient: (httpClient: HttpClient) => Promise<any>,
                             onResponse?: (some: any) => void,
                             onError?: (error: any) => void): void {
-    if (this.cachedHttpClient) {
-      this.httpClientExecuteCached(onHttpClient, onResponse, onError);
+    if (this.httpClient) {
+      this.execute(this.httpClient, onHttpClient, onResponse, onError);
     } else {
       const responseSubscription = this.messagingService.subscribe(HTTP_CLIENT_SUPPLIED, (httpClientPayload) => {
         responseSubscription.unsubscribe();
-        this.cachedHttpClient = httpClientPayload.httpClient;
-        this.httpClientExecuteCached(onHttpClient, onResponse, onError);
+        this.httpClient = httpClientPayload.httpClient;
+        this.execute(this.httpClient, onHttpClient, onResponse, onError);
       });
       this.messagingService.publish(HTTP_CLIENT_NEEDED, null);
     }
   }
 
-  private httpClientExecuteCached(onHttpClient: (httpClient: HttpClient) => Promise<any>,
-                                  onResponse?: (some: any) => void,
-                                  onError?: (error: any) => void): void {
-    onHttpClient(this.cachedHttpClient).then((some) => {
+  private execute(httpClient: HttpClient,
+                  onHttpClient: (httpClient: HttpClient) => Promise<any>,
+                  onResponse?: (some: any) => void,
+                  onError?: (error: any) => void): void {
+    onHttpClient(httpClient).then((some) => {
       if (onResponse) {
         onResponse(some);
       }

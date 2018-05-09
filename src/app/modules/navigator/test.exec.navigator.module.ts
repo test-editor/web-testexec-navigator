@@ -1,6 +1,6 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavigatorComponent } from './navigator.component';
+import { TestExecNavigatorComponent } from './test.exec.navigator.component';
 import { TestCaseServiceModule } from '../test-case-service/test.case.service.module';
 import { TestCaseServiceConfig } from '../test-case-service/test.case.service.config';
 import { TreeViewerModule } from '../tree-viewer/tree-viewer.module';
@@ -11,16 +11,16 @@ import { TreeViewerComponent } from '../tree-viewer/tree-viewer.component';
     CommonModule, TreeViewerModule
   ],
   declarations: [
-    NavigatorComponent
+    TestExecNavigatorComponent
   ],
   exports: [
-    NavigatorComponent
+    TestExecNavigatorComponent
   ]
 })
-export class NavigatorModule {
+export class TestExecNavigatorModule {
   static forRoot(testCaseServiceConfig: TestCaseServiceConfig): ModuleWithProviders {
     return {
-      ngModule: NavigatorModule,
+      ngModule: TestExecNavigatorModule,
       providers: [
         TestCaseServiceModule.forRoot(testCaseServiceConfig).providers
       ]

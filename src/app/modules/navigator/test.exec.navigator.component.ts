@@ -13,11 +13,11 @@ interface NavigationOpenPayload {
 const EMPTY_TREE: TreeNode = { name: '<empty>', children: [] };
 
 @Component({
-  selector: 'app-navigator',
-  templateUrl: './navigator.component.html',
-  styleUrls: ['./navigator.component.css']
+  selector: 'app-testexec-navigator',
+  templateUrl: './test.exec.navigator.component.html',
+  styleUrls: ['./test.exec.navigator.component.css']
 })
-export class NavigatorComponent implements OnInit, OnDestroy {
+export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   @Output() treeNode: TreeNode = EMPTY_TREE;
   navigationSubscription: Subscription;

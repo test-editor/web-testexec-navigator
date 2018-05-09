@@ -1,14 +1,14 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { NavigatorComponent } from './navigator.component';
+import { TestExecNavigatorComponent } from './test.exec.navigator.component';
 import { TreeViewerComponent } from '../tree-viewer/tree-viewer.component';
 import { MessagingModule } from '@testeditor/messaging-service';
 import { TestCaseService } from '../test-case-service/default.test.case.service';
 import { mock, instance } from 'ts-mockito';
 
-describe('NavigatorComponent', () => {
-  let component: NavigatorComponent;
-  let fixture: ComponentFixture<NavigatorComponent>;
+describe('TestExecNavigatorComponent', () => {
+  let component: TestExecNavigatorComponent;
+  let fixture: ComponentFixture<TestExecNavigatorComponent>;
   const testCaseServiceMock = mock(TestCaseService);
 
   beforeEach(async(() => {
@@ -17,7 +17,7 @@ describe('NavigatorComponent', () => {
         MessagingModule.forRoot()
       ],
       declarations: [
-        NavigatorComponent,
+        TestExecNavigatorComponent,
         TreeViewerComponent
       ],
       providers: [
@@ -28,7 +28,7 @@ describe('NavigatorComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(NavigatorComponent);
+    fixture = TestBed.createComponent(TestExecNavigatorComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
