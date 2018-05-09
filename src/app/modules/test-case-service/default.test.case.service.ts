@@ -21,7 +21,7 @@ export abstract class TestCaseService {
 @Injectable()
 export class DefaultTestCaseService extends TestCaseService {
 
-  private static readonly callTreeURLPath = '/test-case/call-tree';
+  private static readonly callTreeURLPath = '/call-tree';
   private serviceUrl: string;
 
   private cachedHttpClient: HttpClient;
@@ -34,17 +34,16 @@ export class DefaultTestCaseService extends TestCaseService {
   getCallTree(path: string,
               onResponse?: (status: CallTreeNode) => void,
               onError?: (error: any) => void): void {
+    console.log('DefaultTestCaseService.getCallTree');
     this.httpClientExecute(httpClient => {
-      return httpClient.get<CallTreeNode>(this.getURL(path, DefaultTestCaseService.callTreeURLPath))
+      console.log('got http client');
+      const requestUrl =  `${this.serviceUrl}${DefaultTestCaseService.callTreeURLPath}?resource=${encodeURIComponent(path)}`;
+      console.log('request: ' + requestUrl);
+      return httpClient.get<CallTreeNode>(requestUrl)
         .toPromise();
     },
     onResponse,
     onError);
-  }
-
-  private getURL(workspaceElementPath: string, urlPath: string = ''): string {
-    const encodedPath = workspaceElementPath.split('/').map(encodeURIComponent).join('/');
-    return `${this.serviceUrl}${urlPath}?resource=${encodedPath}`;
   }
 
   // code duplication with xxx service

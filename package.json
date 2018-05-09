@@ -28,7 +28,7 @@
     "prebuild": "npm run clean",
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build --prod",
+    "build": "ng build",
     "test": "ng test -sm=false",
     "test:once": "ng test -sm=false --single-run",
     "lint": "ng lint",
