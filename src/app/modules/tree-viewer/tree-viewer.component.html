@@ -6,15 +6,15 @@
       (dblclick)="config.onDoubleClick(model)"
       [style.padding-left]="level * 12 + 'px'"
       [ngClass]="{
-        'active': model.active,
-        'header': level == 0,
-        'selected': model.selected
+      'active': model.active,
+      'header': level == 0,
+      'selected': model.selected
       }"
     >
-      <div class="tree-view-element">
+      <div class="tree-view-elemen">
         <span class="icon-type fa" [ngClass]="icon" (click)="config.onIconClick(model)">
         </span>
-        <span title="{{model.name}}">{{model.name}}</span>
+        <span title="{{model.hover}}">{{model.name}}</span>
       </div>
     </div>
   </div>

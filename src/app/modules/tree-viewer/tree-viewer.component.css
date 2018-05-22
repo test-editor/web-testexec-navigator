@@ -48,3 +48,11 @@
   background-color: #094771;
   color: #ffffff;
 }
+
+.tree-item-in-error {
+  color: #ff0000;
+}
+
+.tree-item-ok {
+  color: #00ff00;
+}

@@ -25,7 +25,6 @@ export class DefaultTestCaseService extends TestCaseService {
   private serviceUrl: string;
 
   private httpClient: HttpClient;
-
   constructor(config: TestCaseServiceConfig, private messagingService: MessagingService) {
     super();
     this.serviceUrl = config.testCaseServiceUrl;
