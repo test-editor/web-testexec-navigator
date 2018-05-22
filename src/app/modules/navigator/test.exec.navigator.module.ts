@@ -5,6 +5,8 @@ import { TestCaseServiceModule } from '../test-case-service/test.case.service.mo
 import { TestCaseServiceConfig } from '../test-case-service/test.case.service.config';
 import { TreeViewerModule } from '../tree-viewer/tree-viewer.module';
 import { TreeViewerComponent } from '../tree-viewer/tree-viewer.component';
+import { TestExecutionServiceModule } from '../test-execution-service/test.execution.service.module';
+import { TestExecutionServiceConfig } from '../test-execution-service/test.execution.service.config';
 
 @NgModule({
   imports: [
@@ -18,11 +20,13 @@ import { TreeViewerComponent } from '../tree-viewer/tree-viewer.component';
   ]
 })
 export class TestExecNavigatorModule {
-  static forRoot(testCaseServiceConfig: TestCaseServiceConfig): ModuleWithProviders {
+  static forRoot(testCaseServiceConfig: TestCaseServiceConfig,
+                 testExecutionServiceConfig: TestExecutionServiceConfig): ModuleWithProviders {
     return {
       ngModule: TestExecNavigatorModule,
       providers: [
-        TestCaseServiceModule.forRoot(testCaseServiceConfig).providers
+        TestCaseServiceModule.forRoot(testCaseServiceConfig).providers,
+        TestExecutionServiceModule.forRoot(testExecutionServiceConfig).providers
       ]
     };
   }
