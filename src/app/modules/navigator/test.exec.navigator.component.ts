@@ -29,10 +29,11 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   @Output() treeNode: TreeNode = EMPTY_TREE;
   navigationSubscription: Subscription;
   testRunCompletedSubscription: Subscription;
+  runningNumber: number;
 
   constructor(private messagingService: MessagingService,
-              private testCaseService: TestCaseService,
-              private testExecutionService: TestExecutionService) {
+    private testCaseService: TestCaseService,
+    private testExecutionService: TestExecutionService) {
   }
 
   ngOnInit() {
@@ -65,11 +66,45 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   loadExecutedTreeFor(path: string) {
     console.log('call backend for testexecution service');
-    this.testExecutionService.getCallTree(path, (node) => {
-      console.log('get executed tree node');
-      console.log(node);
-      this.treeNode = this.transformExecutionTree(node);
-    });
+    this.testCaseService.getCallTree(
+      path,
+      (node) => {
+        console.log('got testexec call tree answer from backend');
+        console.log(node);
+        this.runningNumber = 0;
+        this.treeNode = this.transformTreeNode(node);
+        this.testExecutionService.getCallTree(path, (executedTree) => {
+          console.log('get executed tree node');
+          console.log(executedTree);
+          executedTree.Children.forEach(child => this.updateExecutionStatus(child));
+          this.treeNode = this.transformExecutionTree(executedTree);
+        });
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+  }
+
+  private updateExecutionStatus(node: ExecutedCallTreeNode) {
+    if (node) {
+      if (!node.Children) {
+        if (node.Enter && !node.Leave && !node.Status) {
+          node.Status = 'ERROR';
+        }
+      } else {
+        let resultingStatus = 'OK';
+        node.Children.forEach(child => {
+          this.updateExecutionStatus(child);
+          if (child.Status && child.Status !== 'OK') {
+            resultingStatus = child.Status;
+          }
+        });
+        if (!node.Status) {
+          node.Status = resultingStatus;
+        }
+      }
+    }
   }
 
   updateTreeFor(path: string) {
@@ -79,7 +114,8 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       (node) => {
         console.log('got testexec call tree answer from backend');
         console.log(node);
-        this.treeNode = this.transformTreeNode(node, 1);
+        this.runningNumber = 0;
+        this.treeNode = this.transformTreeNode(node);
       },
       (error) => {
         console.log(error);
@@ -87,55 +123,88 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     );
   }
 
-  private transformTreeNode(serviceNode: CallTreeNode, idNum: number): TreeNode {
-    return { name: serviceNode.displayName,
-             expanded: true,
-             children: serviceNode.children.map((node) => { idNum += 1; return this.transformTreeNode(node, idNum)}),
-             collapsedCssClasses: 'fa-chevron-right',
-             expandedCssClasses: 'fa-chevron-down',
-             leafCssClasses: 'fa-folder',
-             id: 'ID' + idNum
-           };
+
+
+  private transformTreeNode(serviceNode: CallTreeNode): TreeNode {
+    const nodeNumber = this.runningNumber;
+    this.runningNumber++;
+    return {
+      name: serviceNode.displayName,
+      expanded: true,
+      children: serviceNode.children.map(node => this.transformTreeNode(node)),
+      collapsedCssClasses: 'fa-chevron-right',
+      expandedCssClasses: 'fa-chevron-down',
+      leafCssClasses: 'fa-folder',
+      id: 'ID' + nodeNumber,
+      hover: 'ID' + nodeNumber + ':'
+    };
   }
 
 
   private transformExecutionTree(executedCallTree: ExecutedCallTree): TreeNode {
-    return { name: executedCallTree.Source,
-             expanded: true,
-             children: (executedCallTree.Children || []).map(node => this.transformExecutionNode(node, this.treeNode)),
-             collapsedCssClasses: 'fa-chevron-right',
-             expandedCssClasses: 'fa-chevron-down',
-             leafCssClasses: 'fa-folder',
-             hover: 'CommitID:' + executedCallTree.CommitID
-           };
+    return {
+      name: 'Testrun: ' + executedCallTree.Started,
+      expanded: true,
+      children: (executedCallTree.Children || []).map(node => this.transformExecutionNode(node, this.treeNode)),
+      collapsedCssClasses: 'fa-chevron-right',
+      expandedCssClasses: 'fa-chevron-down',
+      leafCssClasses: 'fa-folder',
+      id: 'IDTR',
+      hover: 'CommitID:' + executedCallTree.CommitID
+    };
   }
 
   private transformExecutionNode(executedCallTreeNode: ExecutedCallTreeNode, original: TreeNode): TreeNode {
-    return { name: executedCallTreeNode.Message,
-             expanded: true,
-             children: this.mergeChildTree(original.children, (executedCallTreeNode.Children || []).map(
-               (node, index) => this.transformExecutionNode(node, original.children[index]))),
-             collapsedCssClasses: this.collapsedIcon(executedCallTreeNode),
-             expandedCssClasses: this.expandedIcon(executedCallTreeNode),
-             leafCssClasses: 'fa-folder',
-             hover: this.hoverFor(executedCallTreeNode)
-           };
+    let originalChildren: TreeNode[];
+
+    if (original) {
+      originalChildren = original.children;
+    }
+
+    return {
+      name: executedCallTreeNode.Message,
+      expanded: true,
+      children: this.mergeChildTree(originalChildren, (executedCallTreeNode.Children || []).map(
+        (node, index) => {
+          let originalNode: TreeNode;
+          if (originalChildren && originalChildren.length > index) {
+            originalNode = originalChildren[index];
+          }
+          return this.transformExecutionNode(node, originalNode);
+        })),
+      collapsedCssClasses: this.collapsedIcon(executedCallTreeNode),
+      expandedCssClasses: this.expandedIcon(executedCallTreeNode),
+      leafCssClasses: 'fa-folder',
+      id: executedCallTreeNode.ID,
+      hover: this.hoverFor(executedCallTreeNode)
+    };
   }
 
   private mergeChildTree(originalChildren: TreeNode[], childrenUpdate: TreeNode[]): TreeNode[] {
-    if (originalChildren.length === childrenUpdate.length) {
-      return childrenUpdate;
-    } else if (originalChildren.length > childrenUpdate.length) {
+    // initial naiive implementation to merge the children with planned executions
+    if (originalChildren && originalChildren.length > childrenUpdate.length) {
       return childrenUpdate.concat(originalChildren.splice(childrenUpdate.length));
     }
-
-    return originalChildren;
+    return childrenUpdate;
   }
 
   private hoverFor(executedCallTreeNode: ExecutedCallTreeNode): string {
-    let result = executedCallTreeNode.ID + ':';
+    let result = executedCallTreeNode.ID;
+
+    if (executedCallTreeNode.Type) {
+      result = result + ', Type: ' + executedCallTreeNode.Type;
+    }
+
+    result = result + ':';
+
     if (executedCallTreeNode.Enter && executedCallTreeNode.Leave) {
       result = result + ' executed ' + (Number(executedCallTreeNode.Leave) - Number(executedCallTreeNode.Enter)) / 1000 + 'ms';
+    }
+
+    const variables: String[] = new Array<String>();
+    if (executedCallTreeNode.PreVariables) {
+      executedCallTreeNode.PreVariables.forEach(variable => { variables.push(variable.Key + ' = "' + variable.Value + '"'); });
+      result = result + ' with ' + variables.join(', ');
     }
 
     return result;

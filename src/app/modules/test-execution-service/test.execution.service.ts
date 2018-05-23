@@ -11,6 +11,8 @@ export class ExecutedCallTree {
   Source: string;
   CommitID: string;
   Children: ExecutedCallTreeNode[];
+  Status?: string;
+  Started?: string;
 }
 
 export class ExecutedCallTreeNode {
