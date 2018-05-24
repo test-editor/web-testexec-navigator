@@ -231,7 +231,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   private isLeaf(executedCallTreeNode: ExecutedCallTreeNode): boolean {
-    return !executedCallTreeNode.Children || executedCallTreeNode.Children.length === 0
+    return !executedCallTreeNode.Children || executedCallTreeNode.Children.length === 0;
   }
 
   private collapsedIcon(executedCallTreeNode: ExecutedCallTreeNode): string {

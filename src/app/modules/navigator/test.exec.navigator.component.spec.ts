@@ -150,9 +150,9 @@ describe('TestExecNavigatorComponent', () => {
           name: 'child',
           expanded: true,
           children: [ ],
-          collapsedCssClasses: 'fa-chevron-right',
-          expandedCssClasses: 'fa-chevron-down',
-          leafCssClasses: 'fa-folder',
+          collapsedCssClasses: 'fa-circle',
+          expandedCssClasses: 'fa-circle',
+          leafCssClasses: 'fa-circle',
           id: 'ID1',
           hover: 'ID1:'
         }
