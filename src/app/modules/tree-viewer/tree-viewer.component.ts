@@ -30,4 +30,22 @@ export class TreeViewerComponent implements OnInit {
     }
   }
 
+  onClick(node: TreeNode) {
+    if (this.config.onClick) {
+      this.config.onClick(node);
+    }
+  }
+
+  onIconClick(node: TreeNode) {
+    if (this.config.onIconClick) {
+      this.config.onIconClick(node);
+    }
+  }
+
+  onDoubleClick(node: TreeNode) {
+    if (this.config.onDoubleClick) {
+      this.config.onDoubleClick(node);
+    }
+  }
+
 }

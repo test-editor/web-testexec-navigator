@@ -2,8 +2,8 @@
   <div class="tree-view-item">
     <div
       class="tree-view-item-key"
-      (click)="config.onClick(model)"
-      (dblclick)="config.onDoubleClick(model)"
+      (click)="onClick(model)"
+      (dblclick)="onDoubleClick(model)"
       [style.padding-left]="level * 12 + 'px'"
       [ngClass]="{
       'active': model.active,
@@ -12,7 +12,7 @@
       }"
     >
       <div class="tree-view-elemen">
-        <span class="icon-type fa" [ngClass]="icon" (click)="config.onIconClick(model)">
+        <span class="icon-type fa" [ngClass]="icon" (click)="onIconClick(model)">
         </span>
         <span title="{{model.hover}}">{{model.name}}</span>
       </div>
@@ -20,7 +20,7 @@
   </div>
   <div *ngIf="model.expanded">
     <div *ngFor="let child of model.children">
-      <app-tree-viewer [model]="child" [level]="level + 1"></app-tree-viewer>
+      <app-tree-viewer [model]="child" [level]="level + 1" [config]="config"></app-tree-viewer>
     </div>
   </div>
 </div>

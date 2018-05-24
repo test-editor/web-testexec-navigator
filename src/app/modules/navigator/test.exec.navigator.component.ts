@@ -27,6 +27,11 @@ const EMPTY_TREE: TreeNode = { name: '<empty>', children: [] };
 export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   @Output() treeNode: TreeNode = EMPTY_TREE;
+  @Output() treeConfig: TreeViewerConfig = {
+      onDoubleClick: (node) => { },
+      onIconClick: (node) => { node.expanded = !node.expanded; },
+      onClick: (node) => { node.expanded = !node.expanded; }
+  };
   navigationSubscription: Subscription;
   testRunCompletedSubscription: Subscription;
   runningNumber: number;
@@ -56,15 +61,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     this.testRunCompletedSubscription.unsubscribe();
   }
 
-  getTreeConfig() {
-    return {
-      onDoubleClick: (node) => { },
-      onIconClick: (node) => { },
-      onClick: (node) => { },
-    };
-  }
-
-  loadExecutedTreeFor(path: string) {
+  loadExecutedTreeFor(path: string): void {
     console.log('call backend for testexecution service');
     this.testCaseService.getCallTree(
       path,
@@ -78,12 +75,19 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
           console.log(executedTree);
           executedTree.Children.forEach(child => this.updateExecutionStatus(child));
           this.treeNode = this.transformExecutionTree(executedTree);
+          this.treeNode.expanded = true;
+          this.treeNode.children.forEach(child => this.updateExpansionStatus(child));
         });
       },
       (error) => {
         console.log(error);
       }
     );
+  }
+
+  private updateExpansionStatus(node: TreeNode) {
+    node.expanded = !new RegExp('.*tree-item-ok.*').test(node.expandedCssClasses);
+    node.children.forEach(child => this.updateExpansionStatus(child));
   }
 
   private updateExecutionStatus(node: ExecutedCallTreeNode) {
@@ -107,7 +111,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     }
   }
 
-  updateTreeFor(path: string) {
+  updateTreeFor(path: string): void {
     console.log('call backend for testexec call tree');
     this.testCaseService.getCallTree(
       path,
@@ -123,23 +127,33 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     );
   }
 
-
-
   private transformTreeNode(serviceNode: CallTreeNode): TreeNode {
     const nodeNumber = this.runningNumber;
     this.runningNumber++;
+    const isLeaf = !serviceNode.children || serviceNode.children.length === 0;
+    let expandedCssClass: string;
+    let collapsedCssClass: string;
+    let leafCssClass: string;
+    if (isLeaf) {
+      collapsedCssClass = 'fa-circle';
+      expandedCssClass = 'fa-circle';
+      leafCssClass = 'fa-circle';
+    } else {
+      collapsedCssClass = 'fa-chevron-right';
+      expandedCssClass = 'fa-chevron-down';
+      leafCssClass = 'fa-folder';
+    }
     return {
       name: serviceNode.displayName,
       expanded: true,
       children: serviceNode.children.map(node => this.transformTreeNode(node)),
-      collapsedCssClasses: 'fa-chevron-right',
-      expandedCssClasses: 'fa-chevron-down',
-      leafCssClasses: 'fa-folder',
+      collapsedCssClasses: collapsedCssClass,
+      expandedCssClasses: expandedCssClass,
+      leafCssClasses: leafCssClass,
       id: 'ID' + nodeNumber,
       hover: 'ID' + nodeNumber + ':'
     };
   }
-
 
   private transformExecutionTree(executedCallTree: ExecutedCallTree): TreeNode {
     return {
@@ -161,6 +175,12 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       originalChildren = original.children;
     }
 
+    const  statusClass = this.statusClass(executedCallTreeNode);
+    let statusClassString = '';
+    if (statusClass) {
+      statusClassString = ' ' + statusClass;
+    }
+
     return {
       name: executedCallTreeNode.Message,
       expanded: true,
@@ -172,8 +192,8 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
           }
           return this.transformExecutionNode(node, originalNode);
         })),
-      collapsedCssClasses: this.collapsedIcon(executedCallTreeNode),
-      expandedCssClasses: this.expandedIcon(executedCallTreeNode),
+      collapsedCssClasses: this.collapsedIcon(executedCallTreeNode) + statusClassString,
+      expandedCssClasses: this.expandedIcon(executedCallTreeNode) + statusClassString,
       leafCssClasses: 'fa-folder',
       id: executedCallTreeNode.ID,
       hover: this.hoverFor(executedCallTreeNode)
@@ -210,30 +230,64 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     return result;
   }
 
+  private isLeaf(executedCallTreeNode: ExecutedCallTreeNode): boolean {
+    return !executedCallTreeNode.Children || executedCallTreeNode.Children.length === 0
+  }
+
   private collapsedIcon(executedCallTreeNode: ExecutedCallTreeNode): string {
     if (executedCallTreeNode.Status) {
       if (executedCallTreeNode.Status === 'OK') {
-        return 'fa-chevron-circle-right tree-item-ok';
+        if (this.isLeaf(executedCallTreeNode)) {
+          return 'fa-circle';
+        } else {
+          return 'fa-chevron-circle-right';
+        }
       } else {
-        return 'fa-times-circle tree-item-in-error';
+        if (this.isLeaf(executedCallTreeNode)) {
+          return 'fa-times-circle';
+        } else {
+          return 'fa-times-rectangle';
+        }
       }
-    } else if (executedCallTreeNode.Enter) {
+    } else if (executedCallTreeNode.Enter || this.isLeaf(executedCallTreeNode)) {
       return 'fa-circle';
+    } else {
+      return 'fa-chevron-right';
     }
-    return 'fa-chevron-right';
   }
 
   private expandedIcon(executedCallTreeNode: ExecutedCallTreeNode): string {
     if (executedCallTreeNode.Status) {
       if (executedCallTreeNode.Status === 'OK') {
-        return 'fa-chevron-circle-down tree-item-ok';
+        if (this.isLeaf(executedCallTreeNode)) {
+          return 'fa-circle';
+        } else {
+          return 'fa-chevron-circle-down';
+        }
       } else {
-        return 'fa-times-circle tree-item-in-error';
+        if (this.isLeaf(executedCallTreeNode)) {
+          return 'fa-times-circle';
+        } else {
+          return 'fa-times-rectangle';
+        }
       }
-    } else if (executedCallTreeNode.Enter) {
+    } else if (executedCallTreeNode.Enter || this.isLeaf(executedCallTreeNode)) {
       return 'fa-circle';
+    } else {
+      return 'fa-chevron-down';
     }
-    return 'fa-chevron-down';
+  }
+
+  private statusClass(executedCallTreeNode: ExecutedCallTreeNode): string {
+    if (executedCallTreeNode.Status) {
+      if (executedCallTreeNode.Status === 'OK') {
+        return 'tree-item-ok';
+      } else {
+        return 'tree-item-in-error';
+      }
+    } else {
+      return undefined;
+    }
   }
 
 }
