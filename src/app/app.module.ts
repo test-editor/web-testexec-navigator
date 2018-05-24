@@ -13,7 +13,9 @@ import { MessagingService, MessagingModule } from '@testeditor/messaging-service
   ],
   imports: [
     BrowserModule,
-    TestExecNavigatorModule.forRoot({ testCaseServiceUrl: 'http://localhost:8080' }),
+    TestExecNavigatorModule.forRoot(
+      { testCaseServiceUrl: 'http://localhost:8080' },
+      { testExecutionServiceUrl: 'http://localhost:8080' }),
     MessagingModule.forRoot()
   ],
   providers: [

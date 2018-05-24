@@ -34,6 +34,7 @@ module.exports = function (config) {
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
+    files: [ 'src/**/*.ts', 'src/**/*.css', 'src/**/*.html' ],
     autoWatch: true,
     browsers: [ 'Chrome', 'Firefox' ],
     singleRun: false
