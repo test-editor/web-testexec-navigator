@@ -1,6 +1,6 @@
 {
   "name": "@testeditor/testexec-navigator",
-  "version": "0.2.13",
+  "version": "0.2.14",
   "description": "Angular component for the navigation of test execution call hierarchies.",
   "license": "EPL",
   "keywords": [
