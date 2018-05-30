@@ -28,9 +28,9 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   @Output() treeNode: TreeNode = EMPTY_TREE;
   @Output() treeConfig: TreeViewerConfig = {
-      onDoubleClick: (node) => { },
-      onIconClick: (node) => { node.expanded = !node.expanded; },
-      onClick: (node) => { node.expanded = !node.expanded; }
+    onDoubleClick: (node) => { },
+    onIconClick: (node) => { node.expanded = !node.expanded; },
+    onClick: (node) => { node.expanded = !node.expanded; }
   };
   navigationSubscription: Subscription;
   testRunCompletedSubscription: Subscription;
@@ -175,7 +175,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       originalChildren = original.children;
     }
 
-    const  statusClass = this.statusClass(executedCallTreeNode);
+    const statusClass = this.statusClass(executedCallTreeNode);
     let statusClassString = '';
     if (statusClass) {
       statusClassString = ' ' + statusClass;
@@ -223,8 +223,14 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
     const variables: String[] = new Array<String>();
     if (executedCallTreeNode.PreVariables) {
-      executedCallTreeNode.PreVariables.forEach(variable => { variables.push(variable.Key + ' = "' + variable.Value + '"'); });
+      Object.keys(executedCallTreeNode.PreVariables).forEach(key => {
+        variables.push(key + ' = "' + executedCallTreeNode.PreVariables[key] + '"');
+      });
       result = result + ' with ' + variables.join(', ');
+    }
+
+    if (executedCallTreeNode.FixtureException) {
+      result = result + '\n' + JSON.stringify(executedCallTreeNode.FixtureException);
     }
 
     return result;

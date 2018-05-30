@@ -21,15 +21,13 @@ export class ExecutedCallTreeNode {
   Message?: string;
   Enter: string;
   Leave?: string;
-  PreVariables?: VariableValue[];
+  PreVariables?: any;
   Children?: ExecutedCallTreeNode[];
-  PostVariables?: VariableValue[];
+  PostVariables?: any;
   Status?: string;
-}
-
-export class VariableValue {
-  Key: String;
-  Value: String;
+  FixtureException?: any; // any json object (that is a map<any>)
+  Exception?: string;
+  AssertionError?: string;
 }
 
 export abstract class TestExecutionService {

@@ -49,35 +49,41 @@ describe('TestExecNavigatorComponent', () => {
      fakeAsync(() => {
        // given
        const executedTree: ExecutedCallTree = {
-         CommitID: '',
-         Source: '',
-         Children: [{
-             ID: 'IDROOT',
-             Type: 'TEST',
-             Enter: '1234',
-             Message: 'some',
-             Children: [
+         'CommitID': '',
+         'Source': '',
+         'Children': [{
+             'ID': 'IDROOT',
+             'Type': 'TEST',
+             'Enter': '1234',
+             'Message': 'some',
+             'Children': [
                {
-                 ID: 'ID0',
-                 Type: 'SPEC',
-                 Enter: '2345',
-                 Message: 'real first',
-                 PreVariables: [
-                   { Key: 'var', Value: 'val' }
-                 ],
-                 Leave: '2346',
-                 Status: 'OK'
+                 'ID': 'ID0',
+                 'Type': 'SPEC',
+                 'Enter': '2345',
+                 'Message': 'real first',
+                 'PreVariables': {
+                   'var': 'val'
+                 },
+                 'Leave': '2346',
+                 'Status': 'OK'
                },
                {
-                 ID: 'ID1',
-                 Type: 'SPEC',
-                 Enter: '2346',
-                 Message: 'real other'
+                 'ID': 'ID1',
+                 'Type': 'SPEC',
+                 'Enter': '2346',
+                 'Message': 'real other',
+                 'AssertionError': 'some error message',
+                 'Exception': 'some exception message',
+                 'FixtureException': {
+                   'some key': [ 42, 48 ],
+                   'otherKey': 'Hello'
+                 }
                },
              ],
-             Leave: '1235',
-             Status: 'ERROR'
-           }]
+           'Leave': '1235',
+           'Status': 'ERROR'
+         }]
        };
 
        const expectedTree: CallTreeNode = {
@@ -106,17 +112,18 @@ describe('TestExecNavigatorComponent', () => {
        // then
        expect(component.treeNode.name).toMatch('Testrun:.*');
        expect(component.treeNode.children.length).toEqual(1);
-       const someNode = component.treeNode.children[0];
-       expect(someNode.name).toMatch('some');
-       expect(someNode.children.length).toEqual(3, 'both the actually executed nodes and the expected to be run node are expected');
-       expect(someNode.children[0].name).toMatch('real first');
-       expect(someNode.children[0].expandedCssClasses).toMatch('.*tree-item-ok.*');
-       expect(someNode.children[0].hover).toMatch('.*var = "val".*');
-       expect(someNode.children[1].name).toMatch('real other');
-       expect(someNode.children[1].expandedCssClasses).toMatch('.*tree-item-in-error.*');
-       expect(someNode.children[2].name).toMatch('still another');
-       expect(someNode.children[2].expandedCssClasses).not.toMatch('.*tree-item.*', 'node not executed should not be marked');
-       expect(someNode.expandedCssClasses).toMatch('.*tree-item-in-error.*');
+       const testCaseRoot = component.treeNode.children[0];
+       expect(testCaseRoot.name).toMatch('some');
+       expect(testCaseRoot.children.length).toEqual(3, 'both the actually executed nodes and the expected to be run node are expected');
+       expect(testCaseRoot.children[0].name).toMatch('real first');
+       expect(testCaseRoot.children[0].expandedCssClasses).toMatch('.*tree-item-ok.*');
+       expect(testCaseRoot.children[0].hover).toMatch('.*var = "val".*');
+       expect(testCaseRoot.children[1].name).toMatch('real other');
+       expect(testCaseRoot.children[1].expandedCssClasses).toMatch('.*tree-item-in-error.*');
+       expect(testCaseRoot.children[1].hover).toMatch('[\\s\\S]*\\{"some key":\\[42,48\\],"otherKey":"Hello"\\}');
+       expect(testCaseRoot.children[2].name).toMatch('still another');
+       expect(testCaseRoot.children[2].expandedCssClasses).not.toMatch('.*tree-item.*', 'node not executed should not be marked');
+       expect(testCaseRoot.expandedCssClasses).toMatch('.*tree-item-in-error.*');
   }));
 
   it('should provide transformed call tree when loading static call tree expectation from backend', fakeAsync(() => {
