@@ -8,28 +8,26 @@ const HTTP_CLIENT_NEEDED = 'httpClient.needed';
 const HTTP_CLIENT_SUPPLIED = 'httpClient.supplied';
 
 export class ExecutedCallTree {
-  Source: string;
-  CommitID: string;
-  Children: ExecutedCallTreeNode[];
-  Status?: string;
-  Started?: string;
+  source: string;
+  commitId: string;
+  children: ExecutedCallTreeNode[];
+  status?: string;
+  started?: string;
 }
 
 export class ExecutedCallTreeNode {
-  ID: string;
-  Type: string;
-  Message?: string;
-  Enter: string;
-  Leave?: string;
-  PreVariables?: VariableValue[];
-  Children?: ExecutedCallTreeNode[];
-  PostVariables?: VariableValue[];
-  Status?: string;
-}
-
-export class VariableValue {
-  Key: String;
-  Value: String;
+  id: string;
+  type: string;
+  message?: string;
+  enter: string;
+  leave?: string;
+  preVariables?: any;
+  children?: ExecutedCallTreeNode[];
+  postVariables?: any;
+  status?: string;
+  fixtureException?: any; // any json object (that is a map<any>)
+  exception?: string;
+  assertionError?: string;
 }
 
 export abstract class TestExecutionService {

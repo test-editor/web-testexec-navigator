@@ -47,14 +47,14 @@ describe('TestExecutionService', () => {
         method: 'GET',
         url: serviceConfig.testExecutionServiceUrl + '/call-tree?resource=test.tcl'
       };
-      const mockResponse: ExecutedCallTree = { CommitID: 'some', Source: 'source', Children: null };
+      const mockResponse: ExecutedCallTree = { commitId: 'some', source: 'source', children: null };
 
       // when
       executionService.getCallTree(tclFilePath,
 
         // then
        (node) => {
-          expect(node).toEqual({ CommitID: 'some', Source: 'source', Children: null});
+          expect(node).toEqual({ commitId: 'some', source: 'source', children: null});
         });
 
       httpMock.match(testExecutionRequest)[0].flush(mockResponse);

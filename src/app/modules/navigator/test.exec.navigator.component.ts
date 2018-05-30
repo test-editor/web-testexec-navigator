@@ -28,9 +28,9 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   @Output() treeNode: TreeNode = EMPTY_TREE;
   @Output() treeConfig: TreeViewerConfig = {
-      onDoubleClick: (node) => { },
-      onIconClick: (node) => { node.expanded = !node.expanded; },
-      onClick: (node) => { node.expanded = !node.expanded; }
+    onDoubleClick: (node) => { },
+    onIconClick: (node) => { node.expanded = !node.expanded; },
+    onClick: (node) => { node.expanded = !node.expanded; }
   };
   navigationSubscription: Subscription;
   testRunCompletedSubscription: Subscription;
@@ -73,7 +73,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
         this.testExecutionService.getCallTree(path, (executedTree) => {
           console.log('get executed tree node');
           console.log(executedTree);
-          executedTree.Children.forEach(child => this.updateExecutionStatus(child));
+          executedTree.children.forEach(child => this.updateExecutionStatus(child));
           this.treeNode = this.transformExecutionTree(executedTree);
           this.treeNode.expanded = true;
           this.treeNode.children.forEach(child => this.updateExpansionStatus(child));
@@ -92,20 +92,20 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   private updateExecutionStatus(node: ExecutedCallTreeNode) {
     if (node) {
-      if (!node.Children) {
-        if (node.Enter && !node.Leave && !node.Status) {
-          node.Status = 'ERROR';
+      if (!node.children) {
+        if (node.enter && !node.leave && !node.status) {
+          node.status = 'ERROR';
         }
       } else {
         let resultingStatus = 'OK';
-        node.Children.forEach(child => {
+        node.children.forEach(child => {
           this.updateExecutionStatus(child);
-          if (child.Status && child.Status !== 'OK') {
-            resultingStatus = child.Status;
+          if (child.status && child.status !== 'OK') {
+            resultingStatus = child.status;
           }
         });
-        if (!node.Status) {
-          node.Status = resultingStatus;
+        if (!node.status) {
+          node.status = resultingStatus;
         }
       }
     }
@@ -157,14 +157,14 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   private transformExecutionTree(executedCallTree: ExecutedCallTree): TreeNode {
     return {
-      name: 'Testrun: ' + executedCallTree.Started,
+      name: 'Testrun: ' + executedCallTree.started,
       expanded: true,
-      children: (executedCallTree.Children || []).map(node => this.transformExecutionNode(node, this.treeNode)),
+      children: (executedCallTree.children || []).map(node => this.transformExecutionNode(node, this.treeNode)),
       collapsedCssClasses: 'fa-chevron-right',
       expandedCssClasses: 'fa-chevron-down',
       leafCssClasses: 'fa-folder',
       id: 'IDTR',
-      hover: 'CommitID:' + executedCallTree.CommitID
+      hover: 'CommitID:' + executedCallTree.commitId
     };
   }
 
@@ -175,16 +175,16 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       originalChildren = original.children;
     }
 
-    const  statusClass = this.statusClass(executedCallTreeNode);
+    const statusClass = this.statusClass(executedCallTreeNode);
     let statusClassString = '';
     if (statusClass) {
       statusClassString = ' ' + statusClass;
     }
 
     return {
-      name: executedCallTreeNode.Message,
+      name: executedCallTreeNode.message,
       expanded: true,
-      children: this.mergeChildTree(originalChildren, (executedCallTreeNode.Children || []).map(
+      children: this.mergeChildTree(originalChildren, (executedCallTreeNode.children || []).map(
         (node, index) => {
           let originalNode: TreeNode;
           if (originalChildren && originalChildren.length > index) {
@@ -195,7 +195,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       collapsedCssClasses: this.collapsedIcon(executedCallTreeNode) + statusClassString,
       expandedCssClasses: this.expandedIcon(executedCallTreeNode) + statusClassString,
       leafCssClasses: 'fa-folder',
-      id: executedCallTreeNode.ID,
+      id: executedCallTreeNode.id,
       hover: this.hoverFor(executedCallTreeNode)
     };
   }
@@ -209,34 +209,40 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   private hoverFor(executedCallTreeNode: ExecutedCallTreeNode): string {
-    let result = executedCallTreeNode.ID;
+    let result = executedCallTreeNode.id;
 
-    if (executedCallTreeNode.Type) {
-      result = result + ', Type: ' + executedCallTreeNode.Type;
+    if (executedCallTreeNode.type) {
+      result = result + ', Type: ' + executedCallTreeNode.type;
     }
 
     result = result + ':';
 
-    if (executedCallTreeNode.Enter && executedCallTreeNode.Leave) {
-      result = result + ' executed ' + (Number(executedCallTreeNode.Leave) - Number(executedCallTreeNode.Enter)) / 1000 + 'ms';
+    if (executedCallTreeNode.enter && executedCallTreeNode.leave) {
+      result = result + ' executed ' + (Number(executedCallTreeNode.leave) - Number(executedCallTreeNode.enter)) / 1000 + 'ms';
     }
 
     const variables: String[] = new Array<String>();
-    if (executedCallTreeNode.PreVariables) {
-      executedCallTreeNode.PreVariables.forEach(variable => { variables.push(variable.Key + ' = "' + variable.Value + '"'); });
+    if (executedCallTreeNode.preVariables) {
+      Object.keys(executedCallTreeNode.preVariables).forEach(key => {
+        variables.push(key + ' = "' + executedCallTreeNode.preVariables[key] + '"');
+      });
       result = result + ' with ' + variables.join(', ');
+    }
+
+    if (executedCallTreeNode.fixtureException) {
+      result = result + '\n' + JSON.stringify(executedCallTreeNode.fixtureException);
     }
 
     return result;
   }
 
   private isLeaf(executedCallTreeNode: ExecutedCallTreeNode): boolean {
-    return !executedCallTreeNode.Children || executedCallTreeNode.Children.length === 0;
+    return !executedCallTreeNode.children || executedCallTreeNode.children.length === 0;
   }
 
   private collapsedIcon(executedCallTreeNode: ExecutedCallTreeNode): string {
-    if (executedCallTreeNode.Status) {
-      if (executedCallTreeNode.Status === 'OK') {
+    if (executedCallTreeNode.status) {
+      if (executedCallTreeNode.status === 'OK') {
         if (this.isLeaf(executedCallTreeNode)) {
           return 'fa-circle';
         } else {
@@ -249,7 +255,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
           return 'fa-times-rectangle';
         }
       }
-    } else if (executedCallTreeNode.Enter || this.isLeaf(executedCallTreeNode)) {
+    } else if (executedCallTreeNode.enter || this.isLeaf(executedCallTreeNode)) {
       return 'fa-circle';
     } else {
       return 'fa-chevron-right';
@@ -257,8 +263,8 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   private expandedIcon(executedCallTreeNode: ExecutedCallTreeNode): string {
-    if (executedCallTreeNode.Status) {
-      if (executedCallTreeNode.Status === 'OK') {
+    if (executedCallTreeNode.status) {
+      if (executedCallTreeNode.status === 'OK') {
         if (this.isLeaf(executedCallTreeNode)) {
           return 'fa-circle';
         } else {
@@ -271,7 +277,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
           return 'fa-times-rectangle';
         }
       }
-    } else if (executedCallTreeNode.Enter || this.isLeaf(executedCallTreeNode)) {
+    } else if (executedCallTreeNode.enter || this.isLeaf(executedCallTreeNode)) {
       return 'fa-circle';
     } else {
       return 'fa-chevron-down';
@@ -279,8 +285,8 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   private statusClass(executedCallTreeNode: ExecutedCallTreeNode): string {
-    if (executedCallTreeNode.Status) {
-      if (executedCallTreeNode.Status === 'OK') {
+    if (executedCallTreeNode.status) {
+      if (executedCallTreeNode.status === 'OK') {
         return 'tree-item-ok';
       } else {
         return 'tree-item-in-error';
