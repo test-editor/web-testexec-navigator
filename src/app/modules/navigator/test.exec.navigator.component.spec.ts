@@ -49,40 +49,40 @@ describe('TestExecNavigatorComponent', () => {
      fakeAsync(() => {
        // given
        const executedTree: ExecutedCallTree = {
-         'CommitID': '',
-         'Source': '',
-         'Children': [{
-             'ID': 'IDROOT',
-             'Type': 'TEST',
-             'Enter': '1234',
-             'Message': 'some',
-             'Children': [
+         'commitId': '',
+         'source': '',
+         'children': [{
+             'id': 'IDROOT',
+             'type': 'TEST',
+             'enter': '1234',
+             'message': 'some',
+             'children': [
                {
-                 'ID': 'ID0',
-                 'Type': 'SPEC',
-                 'Enter': '2345',
-                 'Message': 'real first',
-                 'PreVariables': {
+                 'id': 'ID0',
+                 'type': 'SPEC',
+                 'enter': '2345',
+                 'message': 'real first',
+                 'preVariables': {
                    'var': 'val'
                  },
-                 'Leave': '2346',
-                 'Status': 'OK'
+                 'leave': '2346',
+                 'status': 'OK'
                },
                {
-                 'ID': 'ID1',
-                 'Type': 'SPEC',
-                 'Enter': '2346',
-                 'Message': 'real other',
-                 'AssertionError': 'some error message',
-                 'Exception': 'some exception message',
-                 'FixtureException': {
+                 'id': 'ID1',
+                 'type': 'SPEC',
+                 'enter': '2346',
+                 'message': 'real other',
+                 'assertionError': 'some error message',
+                 'exception': 'some exception message',
+                 'fixtureException': {
                    'some key': [ 42, 48 ],
                    'otherKey': 'Hello'
                  }
                },
              ],
-           'Leave': '1235',
-           'Status': 'ERROR'
+           'leave': '1235',
+           'status': 'ERROR'
          }]
        };
 
