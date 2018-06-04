@@ -2,7 +2,7 @@ import { async, ComponentFixture, TestBed, fakeAsync, inject, tick } from '@angu
 
 import { TestExecNavigatorComponent } from './test.exec.navigator.component';
 import { TreeViewerComponent } from '../tree-viewer/tree-viewer.component';
-import { MessagingModule } from '@testeditor/messaging-service';
+import { MessagingModule, MessagingService } from '@testeditor/messaging-service';
 import { TestCaseService, CallTreeNode, DefaultTestCaseService } from '../test-case-service/default.test.case.service';
 import { mock, instance, when, anyFunction, capture } from 'ts-mockito';
 import { TestExecutionService, DefaultTestExecutionService } from '../test-execution-service/test.execution.service';
@@ -11,9 +11,12 @@ import { TestCaseServiceConfig } from '../test-case-service/test.case.service.co
 import { TestExecutionServiceConfig } from '../test-execution-service/test.execution.service.config';
 import { HttpClientModule } from '@angular/common/http';
 import { ExecutedCallTree } from '../test-execution-service/test.execution.service';
+import { TEST_NAVIGATION_SELECT } from './event-types';
+import { By } from '@angular/platform-browser';
 
 describe('TestExecNavigatorComponent', () => {
   let component: TestExecNavigatorComponent;
+  let messagingService: MessagingService;
   let fixture: ComponentFixture<TestExecNavigatorComponent>;
   const testCaseServiceMock = mock(DefaultTestCaseService);
   const testExecutionServiceMock = mock(DefaultTestExecutionService);
@@ -37,6 +40,7 @@ describe('TestExecNavigatorComponent', () => {
 
   beforeEach(() => {
     fixture = TestBed.createComponent(TestExecNavigatorComponent);
+    messagingService = TestBed.get(MessagingService);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -166,5 +170,27 @@ describe('TestExecNavigatorComponent', () => {
       ]
     });
   }));
+
+  it('unselects previous selection, sets "selected" flag, and publishes TEST_NAVIGATION_SELECT event when element is clicked', () => {
+    // given
+    let actualPayload = null;
+    messagingService.subscribe(TEST_NAVIGATION_SELECT, (payload) => actualPayload = payload);
+
+    component.treeNode = { name: 'root', expanded: true, children: [
+      { name: 'child1', children: [] },
+      { name: 'child2', children: [] }
+    ] };
+    component.selectedNode = component.treeNode.children[1];
+    fixture.detectChanges();
+
+    // when
+    const items = fixture.debugElement.queryAll(By.css('.tree-view-item-key'));
+    items[1].nativeElement.click(); // click 'child1'
+
+    // then
+    expect(component.treeNode.children[1].selected).toBeFalsy();
+    expect(component.treeNode.children[0].selected).toBeTruthy();
+    expect(actualPayload).toEqual(component.treeNode.children[0]);
+  });
 
 });
