@@ -5,6 +5,7 @@ import { TestCaseService, CallTreeNode } from '../test-case-service/default.test
 import { MessagingService } from '@testeditor/messaging-service';
 import { Subscription } from 'rxjs/Subscription';
 import { TestExecutionService, ExecutedCallTreeNode, ExecutedCallTree } from '../test-execution-service/test.execution.service';
+import { TEST_NAVIGATION_SELECT } from './event-types';
 
 const NAVIGATION_OPEN = 'navigation.open';
 const TEST_EXECUTION_FINISHED = 'test.execution.finished';
@@ -30,8 +31,15 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   @Output() treeConfig: TreeViewerConfig = {
     onDoubleClick: (node) => { },
     onIconClick: (node) => { node.expanded = !node.expanded; },
-    onClick: (node) => { node.expanded = !node.expanded; }
+    onClick: (node) => {
+      node.expanded = !node.expanded;
+      this.selectedNode = node;
+      this.messagingService.publish(TEST_NAVIGATION_SELECT, node);
+    }
   };
+
+  private _selectedNode: TreeNode;
+
   navigationSubscription: Subscription;
   testRunCompletedSubscription: Subscription;
   runningNumber: number;
@@ -39,6 +47,18 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   constructor(private messagingService: MessagingService,
     private testCaseService: TestCaseService,
     private testExecutionService: TestExecutionService) {
+  }
+
+  get selectedNode(): TreeNode {
+    return this._selectedNode;
+  }
+
+  set selectedNode(node: TreeNode) {
+    if (this._selectedNode) {
+      this._selectedNode.selected = false;
+    }
+    this._selectedNode = node;
+    this._selectedNode.selected = true;
   }
 
   ngOnInit() {
