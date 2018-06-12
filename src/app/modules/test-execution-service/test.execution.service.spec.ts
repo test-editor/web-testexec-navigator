@@ -42,19 +42,19 @@ describe('TestExecutionService', () => {
   it('returns ExecutedCallTree json when called', fakeAsync(inject([HttpTestingController, TestExecutionService],
     (httpMock: HttpTestingController, executionService: TestExecutionService) => {
       // given
-      const tclFilePath = 'test.tcl';
+      const testSuiteResourceUrl = 'http://example.org/test-suite/1234/5678';
       const testExecutionRequest = {
         method: 'GET',
-        url: serviceConfig.testExecutionServiceUrl + '/call-tree?resource=test.tcl'
+        url: testSuiteResourceUrl
       };
-      const mockResponse: ExecutedCallTree = { commitId: 'some', source: 'source', children: null };
+      const mockResponse: ExecutedCallTree = { testSuiteId: '1234', testSuiteRunId: '5678', resources: null, testRuns: null };
 
       // when
-      executionService.getCallTree(tclFilePath,
+      executionService.getCallTree(testSuiteResourceUrl,
 
         // then
        (node) => {
-          expect(node).toEqual({ commitId: 'some', source: 'source', children: null});
+          expect(node).toEqual({ testSuiteId: '1234', testSuiteRunId: '5678', resources: null, testRuns: null });
         });
 
       httpMock.match(testExecutionRequest)[0].flush(mockResponse);

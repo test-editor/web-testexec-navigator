@@ -13,6 +13,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { ExecutedCallTree } from '../test-execution-service/test.execution.service';
 import { TEST_NAVIGATION_SELECT } from './event-types';
 import { By } from '@angular/platform-browser';
+import { TestRunId } from './test-run-id';
 
 describe('TestExecNavigatorComponent', () => {
   let component: TestExecNavigatorComponent;
@@ -53,9 +54,10 @@ describe('TestExecNavigatorComponent', () => {
      fakeAsync(() => {
        // given
        const executedTree: ExecutedCallTree = {
-         'commitId': '',
-         'source': '',
-         'children': [{
+         'testSuiteId': '',
+         'testSuiteRunId': '',
+         'resources': [],
+         'testRuns': [{
              'id': 'IDROOT',
              'type': 'TEST',
              'enter': '1234',
@@ -103,7 +105,7 @@ describe('TestExecNavigatorComponent', () => {
        };
 
        // when
-       component.loadExecutedTreeFor('test.tcl');
+       component.loadExecutedTreeFor('test.tcl', 'http://example.org/test-suite/1234/5678');
 
        // and when
        const [ , okFunction, ] = capture(testCaseServiceMock.getCallTree).last();
@@ -177,7 +179,7 @@ describe('TestExecNavigatorComponent', () => {
     messagingService.subscribe(TEST_NAVIGATION_SELECT, (payload) => actualPayload = payload);
 
     component.treeNode = { name: 'root', expanded: true, children: [
-      { name: 'child1', children: [] },
+      { name: 'child1', children: [], id: '1234/5678/9/0' },
       { name: 'child2', children: [] }
     ] };
     component.selectedNode = component.treeNode.children[1];
@@ -190,7 +192,7 @@ describe('TestExecNavigatorComponent', () => {
     // then
     expect(component.treeNode.children[1].selected).toBeFalsy();
     expect(component.treeNode.children[0].selected).toBeTruthy();
-    expect(actualPayload).toEqual(component.treeNode.children[0]);
+    expect(actualPayload).toEqual('1234/5678/9/0');
   });
 
 });
