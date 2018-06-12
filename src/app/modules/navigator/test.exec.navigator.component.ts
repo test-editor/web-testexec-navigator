@@ -6,6 +6,7 @@ import { MessagingService } from '@testeditor/messaging-service';
 import { Subscription } from 'rxjs/Subscription';
 import { TestExecutionService, ExecutedCallTreeNode, ExecutedCallTree } from '../test-execution-service/test.execution.service';
 import { TEST_NAVIGATION_SELECT } from './event-types';
+import { TestRunId } from './test-run-id';
 
 const NAVIGATION_OPEN = 'navigation.open';
 const TEST_EXECUTION_FINISHED = 'test.execution.finished';
@@ -35,7 +36,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     onClick: (node) => {
       node.expanded = !node.expanded;
       this.selectedNode = node;
-      this.messagingService.publish(TEST_NAVIGATION_SELECT, node);
+      this.messagingService.publish(TEST_NAVIGATION_SELECT, node.id);
     }
   };
 
@@ -176,19 +177,20 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   private transformExecutionTree(executedCallTree: ExecutedCallTree): TreeNode {
+    const rootID = new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId);
     return {
       name: 'Testrun: ' + executedCallTree.started,
       expanded: true,
-      children: (executedCallTree.testRuns || []).map(node => this.transformExecutionNode(node, this.treeNode)),
+      children: (executedCallTree.testRuns || []).map(node => this.transformExecutionNode(node, this.treeNode, rootID)),
       collapsedCssClasses: 'fa-chevron-right',
       expandedCssClasses: 'fa-chevron-down',
       leafCssClasses: 'fa-folder',
-      id: `${executedCallTree.testSuiteId}/${executedCallTree.testSuiteRunId}`,
+      id: `${rootID.testSuiteID}/${rootID.testSuiteRunID}`,
       hover: `Test Suite [Run] ID: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}]`
     };
   }
 
-  private transformExecutionNode(executedCallTreeNode: ExecutedCallTreeNode, original: TreeNode): TreeNode {
+  private transformExecutionNode(executedCallTreeNode: ExecutedCallTreeNode, original: TreeNode, baseID: TestRunId): TreeNode {
     let originalChildren: TreeNode[];
 
     if (original) {
@@ -201,6 +203,8 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       statusClassString = ' ' + statusClass;
     }
 
+    const id = baseID.createChildID(executedCallTreeNode.id);
+
     return {
       name: executedCallTreeNode.message,
       expanded: true,
@@ -210,15 +214,17 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
           if (originalChildren && originalChildren.length > index) {
             originalNode = originalChildren[index];
           }
-          return this.transformExecutionNode(node, originalNode);
+          return this.transformExecutionNode(node, originalNode, id);
         })),
       collapsedCssClasses: this.collapsedIcon(executedCallTreeNode) + statusClassString,
       expandedCssClasses: this.expandedIcon(executedCallTreeNode) + statusClassString,
       leafCssClasses: 'fa-folder',
-      id: executedCallTreeNode.id,
+      id: id.toPathString(),
       hover: this.hoverFor(executedCallTreeNode)
     };
   }
+
+
 
   private mergeChildTree(originalChildren: TreeNode[], childrenUpdate: TreeNode[]): TreeNode[] {
     // initial naiive implementation to merge the children with planned executions
