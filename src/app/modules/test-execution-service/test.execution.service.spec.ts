@@ -47,14 +47,14 @@ describe('TestExecutionService', () => {
         method: 'GET',
         url: testSuiteResourceUrl
       };
-      const mockResponse: ExecutedCallTree = { commitId: 'some', source: 'source', children: null };
+      const mockResponse: ExecutedCallTree = { testSuiteId: '1234', testSuiteRunId: '5678', resources: null, testRuns: null };
 
       // when
       executionService.getCallTree(testSuiteResourceUrl,
 
         // then
        (node) => {
-          expect(node).toEqual({ commitId: 'some', source: 'source', children: null});
+          expect(node).toEqual({ testSuiteId: '1234', testSuiteRunId: '5678', resources: null, testRuns: null });
         });
 
       httpMock.match(testExecutionRequest)[0].flush(mockResponse);

@@ -9,9 +9,10 @@ const HTTP_CLIENT_NEEDED = 'httpClient.needed';
 const HTTP_CLIENT_SUPPLIED = 'httpClient.supplied';
 
 export class ExecutedCallTree {
-  source: string;
-  commitId: string;
-  children: ExecutedCallTreeNode[];
+  testSuiteId: string;
+  testSuiteRunId: string;
+  resources: string[]; // TODO or is it supposed to be resourcePaths?
+  testRuns: ExecutedCallTreeNode[];
   status?: string;
   started?: string;
 }

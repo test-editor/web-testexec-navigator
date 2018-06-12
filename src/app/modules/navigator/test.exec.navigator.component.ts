@@ -93,7 +93,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
         this.testExecutionService.getCallTree(resourceURL, (executedTree) => {
           console.log('get executed tree node');
           console.log(executedTree);
-          executedTree.children.forEach(child => this.updateExecutionStatus(child));
+          executedTree.testRuns.forEach(child => this.updateExecutionStatus(child));
           this.treeNode = this.transformExecutionTree(executedTree);
           this.treeNode.expanded = true;
           this.treeNode.children.forEach(child => this.updateExpansionStatus(child));
@@ -179,12 +179,12 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     return {
       name: 'Testrun: ' + executedCallTree.started,
       expanded: true,
-      children: (executedCallTree.children || []).map(node => this.transformExecutionNode(node, this.treeNode)),
+      children: (executedCallTree.testRuns || []).map(node => this.transformExecutionNode(node, this.treeNode)),
       collapsedCssClasses: 'fa-chevron-right',
       expandedCssClasses: 'fa-chevron-down',
       leafCssClasses: 'fa-folder',
-      id: 'IDTR',
-      hover: 'CommitID:' + executedCallTree.commitId
+      id: `${executedCallTree.testSuiteId}/${executedCallTree.testSuiteRunId}`,
+      hover: `Test Suite [Run] ID: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}]`
     };
   }
 

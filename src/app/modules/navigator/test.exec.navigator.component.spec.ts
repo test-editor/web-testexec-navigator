@@ -53,9 +53,10 @@ describe('TestExecNavigatorComponent', () => {
      fakeAsync(() => {
        // given
        const executedTree: ExecutedCallTree = {
-         'commitId': '',
-         'source': '',
-         'children': [{
+         'testSuiteId': '',
+         'testSuiteRunId': '',
+         'resources': [],
+         'testRuns': [{
              'id': 'IDROOT',
              'type': 'TEST',
              'enter': '1234',
