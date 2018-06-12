@@ -16,6 +16,7 @@ interface NavigationOpenPayload {
 }
 interface TestRunCompletedPayload {
   path: string;
+  resourceURL: string;
 }
 
 const EMPTY_TREE: TreeNode = { name: '<empty>', children: [] };
@@ -63,9 +64,8 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     console.log('TestExecNavigatorComponent: subscribes for test execution finished');
-    this.testRunCompletedSubscription = this.messagingService.subscribe(TEST_EXECUTION_FINISHED, (testRun: TestRunCompletedPayload) => {
-      this.loadExecutedTreeFor(testRun.path);
-    });
+    this.testRunCompletedSubscription = this.messagingService.subscribe(TEST_EXECUTION_FINISHED,
+      (testSuiteRun: TestRunCompletedPayload) => this.loadExecutedTreeFor(testSuiteRun.path, testSuiteRun.resourceURL));
     console.log('TestExecNavigatorComponent: subscribes for navigation open');
     this.navigationSubscription = this.messagingService.subscribe(NAVIGATION_OPEN, (document: NavigationOpenPayload) => {
       if (document.path.endsWith('.tcl')) {
@@ -81,7 +81,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     this.testRunCompletedSubscription.unsubscribe();
   }
 
-  loadExecutedTreeFor(path: string): void {
+  loadExecutedTreeFor(path: string, resourceURL: string): void {
     console.log('call backend for testexecution service');
     this.testCaseService.getCallTree(
       path,
@@ -90,7 +90,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
         console.log(node);
         this.runningNumber = 0;
         this.treeNode = this.transformTreeNode(node);
-        this.testExecutionService.getCallTree(path, (executedTree) => {
+        this.testExecutionService.getCallTree(resourceURL, (executedTree) => {
           console.log('get executed tree node');
           console.log(executedTree);
           executedTree.children.forEach(child => this.updateExecutionStatus(child));

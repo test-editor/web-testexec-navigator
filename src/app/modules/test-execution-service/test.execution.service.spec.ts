@@ -42,15 +42,15 @@ describe('TestExecutionService', () => {
   it('returns ExecutedCallTree json when called', fakeAsync(inject([HttpTestingController, TestExecutionService],
     (httpMock: HttpTestingController, executionService: TestExecutionService) => {
       // given
-      const tclFilePath = 'test.tcl';
+      const testSuiteResourceUrl = 'http://example.org/test-suite/1234/5678';
       const testExecutionRequest = {
         method: 'GET',
-        url: serviceConfig.testExecutionServiceUrl + '/call-tree?resource=test.tcl'
+        url: testSuiteResourceUrl
       };
       const mockResponse: ExecutedCallTree = { commitId: 'some', source: 'source', children: null };
 
       // when
-      executionService.getCallTree(tclFilePath,
+      executionService.getCallTree(testSuiteResourceUrl,
 
         // then
        (node) => {

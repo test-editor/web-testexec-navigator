@@ -103,7 +103,7 @@ describe('TestExecNavigatorComponent', () => {
        };
 
        // when
-       component.loadExecutedTreeFor('test.tcl');
+       component.loadExecutedTreeFor('test.tcl', 'http://example.org/test-suite/1234/5678');
 
        // and when
        const [ , okFunction, ] = capture(testCaseServiceMock.getCallTree).last();

@@ -2,6 +2,7 @@ import { TestExecutionServiceConfig } from './test.execution.service.config';
 import { MessagingService } from '@testeditor/messaging-service';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { resource } from 'selenium-webdriver/http';
 
 // code duplication with persistence service and test-editor-web, removal planned with next refactoring
 const HTTP_CLIENT_NEEDED = 'httpClient.needed';
@@ -31,7 +32,7 @@ export class ExecutedCallTreeNode {
 }
 
 export abstract class TestExecutionService {
-  abstract getCallTree(path: string,
+  abstract getCallTree(resourceURL: string,
                        onResponse?: (node: ExecutedCallTree) => void,
                        onError?: (error: any) => void): void;
 }
@@ -49,21 +50,16 @@ export class DefaultTestExecutionService extends TestExecutionService {
     this.serviceUrl = config.testExecutionServiceUrl;
   }
 
-  getCallTree(path: string,
+  getCallTree(resourceURL: string,
               onResponse?: (node: ExecutedCallTree) => void,
               onError?: (error: any) => void): void {
     this.httpClientExecute(
       httpClient => {
         console.log('got http client');
-        return httpClient.get<ExecutedCallTree>(this.getURL(path, DefaultTestExecutionService.callTreeURLPath)).toPromise();
+        return httpClient.get<ExecutedCallTree>(resourceURL).toPromise();
       },
       onResponse,
       onError);
-  }
-
-  private getURL(workspaceElementPath: string, urlPath: string = ''): string {
-    const encodedPath = workspaceElementPath.split('/').map(encodeURIComponent).join('/');
-    return `${this.serviceUrl}${urlPath}?resource=${encodedPath}`;
   }
 
   // code duplication with xxx service
