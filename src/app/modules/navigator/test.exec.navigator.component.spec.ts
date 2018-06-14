@@ -56,16 +56,21 @@ describe('TestExecNavigatorComponent', () => {
        const executedTree: ExecutedCallTree = {
          'testSuiteId': '',
          'testSuiteRunId': '',
-         'resources': [],
+         'resourcePaths': [],
          'testRuns': [{
-             'id': 'IDROOT',
-             'type': 'TEST',
-             'enter': '1234',
-             'message': 'some',
-             'children': [
+            'source': 'org/testeditor/Minimal',
+            'testRunId': '1',
+            'commitId': '',
+            'started': '2018-06-14T12:52:48.327Z',
+            'children': [{
+              'id': 'IDROOT',
+              'node': 'TEST',
+              'enter': '1234',
+              'message': 'some',
+              'children': [
                {
                  'id': 'ID0',
-                 'type': 'SPEC',
+                 'node': 'SPEC',
                  'enter': '2345',
                  'message': 'real first',
                  'preVariables': {
@@ -76,7 +81,7 @@ describe('TestExecNavigatorComponent', () => {
                },
                {
                  'id': 'ID1',
-                 'type': 'SPEC',
+                 'node': 'SPEC',
                  'enter': '2346',
                  'message': 'real other',
                  'assertionError': 'some error message',
@@ -90,6 +95,7 @@ describe('TestExecNavigatorComponent', () => {
            'leave': '1235',
            'status': 'ERROR'
          }]
+        }]
        };
 
        const expectedTree: CallTreeNode = {
