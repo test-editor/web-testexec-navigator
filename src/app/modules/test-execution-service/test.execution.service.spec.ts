@@ -47,14 +47,14 @@ describe('TestExecutionService', () => {
         method: 'GET',
         url: testSuiteResourceUrl
       };
-      const mockResponse: ExecutedCallTree = { testSuiteId: '1234', testSuiteRunId: '5678', resources: null, testRuns: null };
+      const mockResponse: ExecutedCallTree = { testSuiteId: '1234', testSuiteRunId: '5678', resourcePaths: null, testRuns: null };
 
       // when
       executionService.getCallTree(testSuiteResourceUrl,
 
         // then
        (node) => {
-          expect(node).toEqual({ testSuiteId: '1234', testSuiteRunId: '5678', resources: null, testRuns: null });
+          expect(node).toEqual({ testSuiteId: '1234', testSuiteRunId: '5678', resourcePaths: null, testRuns: null });
         });
 
       httpMock.match(testExecutionRequest)[0].flush(mockResponse);

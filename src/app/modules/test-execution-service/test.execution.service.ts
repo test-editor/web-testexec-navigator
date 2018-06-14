@@ -11,15 +11,24 @@ const HTTP_CLIENT_SUPPLIED = 'httpClient.supplied';
 export class ExecutedCallTree {
   testSuiteId: string;
   testSuiteRunId: string;
-  resources: string[]; // TODO or is it supposed to be resourcePaths?
-  testRuns: ExecutedCallTreeNode[];
+  resourcePaths: string[];
+  testRuns: ExecutedTestRunCallTree[];
   status?: string;
   started?: string;
 }
 
+export class ExecutedTestRunCallTree {
+  source: string;
+  commitId: string;
+  testRunId: string;
+  started?: string;
+  children: ExecutedCallTreeNode[];
+  status?: string;
+}
+
 export class ExecutedCallTreeNode {
   id: string;
-  type: string;
+  node: string;
   message?: string;
   enter: string;
   leave?: string;
@@ -41,14 +50,10 @@ export abstract class TestExecutionService {
 @Injectable()
 export class DefaultTestExecutionService extends TestExecutionService {
 
-  private static readonly callTreeURLPath = '/call-tree';
-  private serviceUrl: string;
-
   private httpClient: HttpClient;
 
   constructor(config: TestExecutionServiceConfig, private messagingService: MessagingService) {
     super();
-    this.serviceUrl = config.testExecutionServiceUrl;
   }
 
   getCallTree(resourceURL: string,

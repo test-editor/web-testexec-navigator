@@ -82,6 +82,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     this.testRunCompletedSubscription.unsubscribe();
   }
 
+  // TODO: handle all test runs as opposed to just the first one (i.e. iterate executedCallTree.testRuns as opposed to using element [0])
   loadExecutedTreeFor(path: string, resourceURL: string): void {
     console.log('call backend for testexecution service');
     this.testCaseService.getCallTree(
@@ -94,7 +95,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
         this.testExecutionService.getCallTree(resourceURL, (executedTree) => {
           console.log('get executed tree node');
           console.log(executedTree);
-          executedTree.testRuns.forEach(child => this.updateExecutionStatus(child));
+          executedTree.testRuns[0].children.forEach(child => this.updateExecutionStatus(child));
           this.treeNode = this.transformExecutionTree(executedTree);
           this.treeNode.expanded = true;
           this.treeNode.children.forEach(child => this.updateExpansionStatus(child));
@@ -176,21 +177,23 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     };
   }
 
+  // TODO: handle all test runs as opposed to just the first one (i.e. iterate executedCallTree.testRuns as opposed to using element [0])
   private transformExecutionTree(executedCallTree: ExecutedCallTree): TreeNode {
-    const rootID = new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId);
+    const rootID = new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId, executedCallTree.testRuns[0].testRunId);
     return {
       name: 'Testrun: ' + executedCallTree.started,
       expanded: true,
-      children: (executedCallTree.testRuns || []).map(node => this.transformExecutionNode(node, this.treeNode, rootID)),
+      children: (executedCallTree.testRuns[0].children || []).map(node => this.transformExecutionNode(node, this.treeNode, rootID)),
       collapsedCssClasses: 'fa-chevron-right',
       expandedCssClasses: 'fa-chevron-down',
       leafCssClasses: 'fa-folder',
-      id: `${rootID.testSuiteID}/${rootID.testSuiteRunID}`,
+      id: rootID.toPathString(),
       hover: `Test Suite [Run] ID: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}]`
     };
   }
 
-  private transformExecutionNode(executedCallTreeNode: ExecutedCallTreeNode, original: TreeNode, baseID: TestRunId): TreeNode {
+  private transformExecutionNode(executedCallTreeNode: ExecutedCallTreeNode,
+    original: TreeNode, baseID: TestRunId): TreeNode {
     let originalChildren: TreeNode[];
 
     if (original) {
@@ -203,7 +206,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       statusClassString = ' ' + statusClass;
     }
 
-    const id = baseID.createChildID(executedCallTreeNode.id);
+    const id = new TestRunId(baseID.testSuiteID, baseID.testSuiteRunID, baseID.testRunID, executedCallTreeNode.id);
 
     return {
       name: executedCallTreeNode.message,
@@ -237,8 +240,8 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   private hoverFor(executedCallTreeNode: ExecutedCallTreeNode): string {
     let result = executedCallTreeNode.id;
 
-    if (executedCallTreeNode.type) {
-      result = result + ', Type: ' + executedCallTreeNode.type;
+    if (executedCallTreeNode.node) {
+      result = result + ', Type: ' + executedCallTreeNode.node;
     }
 
     result = result + ':';
