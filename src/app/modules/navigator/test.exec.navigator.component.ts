@@ -187,7 +187,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       collapsedCssClasses: 'fa-chevron-right',
       expandedCssClasses: 'fa-chevron-down',
       leafCssClasses: 'fa-folder',
-      id: `${rootID.testSuiteID}/${rootID.testSuiteRunID}`,
+      id: rootID.toPathString(),
       hover: `Test Suite [Run] ID: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}]`
     };
   }
@@ -206,7 +206,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       statusClassString = ' ' + statusClass;
     }
 
-    const id = baseID.createChildID(executedCallTreeNode.id);
+    const id = new TestRunId(baseID.testSuiteID, baseID.testSuiteRunID, baseID.testRunID, executedCallTreeNode.id);
 
     return {
       name: executedCallTreeNode.message,
