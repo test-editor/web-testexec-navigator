@@ -1,27 +1,29 @@
-// TODO: code clone management (this was partially cloned from web-testexec-details)
+// TODO: code clone management (this was cloned from web-testexec-details)
 export class TestRunId {
   constructor(
-    public testSuiteID: string,
-    public testSuiteRunID: string,
-    public testRunID?: string,
-    public treeID?: string) {}
-
-  createChildID(nodeID: string): TestRunId {
-    const childID = new TestRunId(this.testSuiteID, this.testSuiteRunID);
-    if (this.testRunID) {
-      childID.treeID = nodeID;
-    } else {
-      childID.testRunID = nodeID;
+    /**
+     * ID of a test suite. A test suite is a sequence of tests to be executed.
+     * The same test can be contained multiple times in a test suite,
+     * to be executed at different points in the sequence.
+     */
+    public readonly testSuiteID: string,
+    /** ID of a test suite run, i.e. a particular execution of a test suite. */
+    public readonly testSuiteRunID: string,
+    /** ID of a test run, i.e. a particular execution of a single test. */
+    public readonly testRunID?: string,
+    /** ID of a call tree node, e.g. a particular test step of the test referenced by the test run ID. */
+    public readonly treeID?: string) {
+      if (!testSuiteID || !testSuiteRunID || !testRunID) {
+        throw new Error('Neither of Test Suite ID, Test Suite Run ID, and Test Run ID must be null or empty.');
+      }
     }
-    return childID;
-  }
 
   toPathString(): string {
-    let pathString = this.testSuiteID + '/' + this.testSuiteRunID;
+    let pathString = encodeURIComponent(this.testSuiteID) + '/' + encodeURIComponent(this.testSuiteRunID);
     if (this.testRunID && this.testRunID.length > 0) {
-      pathString += '/' + this.testRunID;
+      pathString += '/' + encodeURIComponent(this.testRunID);
       if (this.treeID && this.treeID.length > 0) {
-        pathString += '/' + this.treeID;
+        pathString += '/' + encodeURIComponent(this.treeID);
       }
     }
     return pathString;
