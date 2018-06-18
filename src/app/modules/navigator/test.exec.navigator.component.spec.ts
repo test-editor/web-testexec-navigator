@@ -54,8 +54,8 @@ describe('TestExecNavigatorComponent', () => {
      fakeAsync(() => {
        // given
        const executedTree: ExecutedCallTree = {
-         'testSuiteId': '',
-         'testSuiteRunId': '',
+         'testSuiteId': '0',
+         'testSuiteRunId': '0',
          'resourcePaths': [],
          'testRuns': [{
             'source': 'org/testeditor/Minimal',
