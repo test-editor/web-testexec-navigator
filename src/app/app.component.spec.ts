@@ -1,7 +1,5 @@
 import { TestBed, async } from '@angular/core/testing';
 import { AppComponent } from './app.component';
-import { TestExecNavigatorComponent } from './modules/navigator/test.exec.navigator.component';
-import { TreeViewerComponent } from './modules/tree-viewer/tree-viewer.component';
 import { MessagingModule } from '@testeditor/messaging-service';
 import { TestExecNavigatorModule } from './modules/navigator/test.exec.navigator.module';
 

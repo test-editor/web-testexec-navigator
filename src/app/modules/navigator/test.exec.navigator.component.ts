@@ -1,6 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef, Output, OnDestroy } from '@angular/core';
-import { TreeNode } from '../tree-viewer/tree-node';
-import { TreeViewerConfig } from '../tree-viewer/tree-viewer-config';
+import { TreeNode, TreeViewerConfig } from '@testeditor/testeditor-commons';
 import { TestCaseService, CallTreeNode } from '../test-case-service/default.test.case.service';
 import { MessagingService } from '@testeditor/messaging-service';
 import { Subscription } from 'rxjs/Subscription';

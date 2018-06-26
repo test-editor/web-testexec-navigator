@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { TestExecNavigatorComponent } from './test.exec.navigator.component';
 import { TestCaseServiceModule } from '../test-case-service/test.case.service.module';
 import { TestCaseServiceConfig } from '../test-case-service/test.case.service.config';
-import { TreeViewerModule } from '../tree-viewer/tree-viewer.module';
-import { TreeViewerComponent } from '../tree-viewer/tree-viewer.component';
+import { TreeViewerModule } from '@testeditor/testeditor-commons';
 import { TestExecutionServiceModule } from '../test-execution-service/test.execution.service.module';
 import { TestExecutionServiceConfig } from '../test-execution-service/test.execution.service.config';
 
