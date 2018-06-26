@@ -1,19 +1,14 @@
-import { async, ComponentFixture, TestBed, fakeAsync, inject, tick } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed, fakeAsync } from '@angular/core/testing';
 
 import { TestExecNavigatorComponent } from './test.exec.navigator.component';
-import { TreeViewerComponent } from '../tree-viewer/tree-viewer.component';
+import { TreeViewerModule } from '@testeditor/testeditor-commons';
 import { MessagingModule, MessagingService } from '@testeditor/messaging-service';
 import { TestCaseService, CallTreeNode, DefaultTestCaseService } from '../test-case-service/default.test.case.service';
-import { mock, instance, when, anyFunction, capture } from 'ts-mockito';
+import { mock, instance, capture } from 'ts-mockito';
 import { TestExecutionService, DefaultTestExecutionService } from '../test-execution-service/test.execution.service';
-import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
-import { TestCaseServiceConfig } from '../test-case-service/test.case.service.config';
-import { TestExecutionServiceConfig } from '../test-execution-service/test.execution.service.config';
-import { HttpClientModule } from '@angular/common/http';
 import { ExecutedCallTree } from '../test-execution-service/test.execution.service';
 import { TEST_NAVIGATION_SELECT } from './event-types';
 import { By } from '@angular/platform-browser';
-import { TestRunId } from './test-run-id';
 
 describe('TestExecNavigatorComponent', () => {
   let component: TestExecNavigatorComponent;
@@ -25,11 +20,11 @@ describe('TestExecNavigatorComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       imports: [
-        MessagingModule.forRoot()
+        MessagingModule.forRoot(),
+        TreeViewerModule
       ],
       declarations: [
-        TestExecNavigatorComponent,
-        TreeViewerComponent
+        TestExecNavigatorComponent
       ],
       providers: [
         { provide: TestCaseService, useValue: instance(testCaseServiceMock) },
