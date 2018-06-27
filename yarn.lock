@@ -194,7 +194,7 @@
     semver "^5.3.0"
     semver-intersect "^1.1.2"
 
-"@testeditor/messaging-service@^1.0.0":
+"@testeditor/messaging-service@~1.4.0":
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/@testeditor/messaging-service/-/messaging-service-1.4.0.tgz#a6ea5de45b1b59c8f0ecdb5af99b2899fb17d3e7"
 
