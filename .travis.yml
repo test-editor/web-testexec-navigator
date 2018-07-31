@@ -32,6 +32,13 @@ script:
 - npm run e2e
 after_success:
 - npm run packagr
+# Autoincrement of patch level version:
+# Tag the repo with a new patch level version tag, if this build is done on
+#     'FIREFOX_VERSION = latest' and (only one of the matrix-builds is relevant)
+#     this is not a pull request and (pull requests themselves should not autoincrement)
+#     this branch is the master branch and (only builds on master are relevant)
+#     there is no tag given (if a tag is alread given, this one will be published and should not again be tagged!)
+- 'if [ "$FIREFOX_VERSION" = "latest" -a "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_TAG" = "" ]; then bash tag_with_new_patch_version.sh; fi'
 before_deploy:
 - touch .npmignore
 - cd dist/
