@@ -30,10 +30,9 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   @Output() treeNode: TreeNode = EMPTY_TREE;
   @Output() treeConfig: TreeViewerConfig = {
-    onDoubleClick: (node) => { },
+    onDoubleClick: (node) => { node.expanded = !node.expanded; },
     onIconClick: (node) => { node.expanded = !node.expanded; },
     onClick: (node) => {
-      node.expanded = !node.expanded;
       this.selectedNode = node;
       this.messagingService.publish(TEST_NAVIGATION_SELECT, node.id);
     }
