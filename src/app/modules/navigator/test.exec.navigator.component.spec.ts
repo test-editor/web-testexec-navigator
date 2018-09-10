@@ -150,6 +150,7 @@ describe('TestExecNavigatorComponent', () => {
     const [path, okFunc, errorFunc] = capture(testCaseServiceMock.getCallTree).last();
     okFunc.apply(null, [node]);
 
+
     // then
     expect(component.treeNode).toEqual({
       name: 'root',
@@ -159,10 +160,12 @@ describe('TestExecNavigatorComponent', () => {
       leafCssClasses: 'fa-folder',
       id: 'ID0',
       hover: 'ID0:',
+      root: component.treeNode,
       children: [
         {
           name: 'child',
           expanded: true,
+          root: component.treeNode,
           children: [ ],
           collapsedCssClasses: 'fa-circle',
           expandedCssClasses: 'fa-circle',
@@ -179,9 +182,9 @@ describe('TestExecNavigatorComponent', () => {
     let actualPayload = null;
     messagingService.subscribe(TEST_NAVIGATION_SELECT, (payload) => actualPayload = payload);
 
-    component.treeNode = { name: 'root', expanded: true, children: [
-      { name: 'child1', children: [], id: '1234/5678/9/0' },
-      { name: 'child2', children: [] }
+    component.treeNode = { name: 'root', expanded: true, root: null, children: [
+      { name: 'child1', root: null, children: [], id: '1234/5678/9/0' },
+      { name: 'child2', root: null, children: [] }
     ] };
     component.selectedNode = component.treeNode.children[1];
     fixture.detectChanges();
