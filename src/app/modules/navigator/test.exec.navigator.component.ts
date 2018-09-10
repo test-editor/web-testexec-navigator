@@ -141,7 +141,6 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
         console.log(callTreeNode);
         this.runningNumber = 0;
         this.treeNode = this.transformTreeNode(callTreeNode);
-        forEach(this.treeNode, (node) => { node.root = this.treeNode; });
       },
       (error) => {
         console.log(error);
@@ -149,7 +148,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     );
   }
 
-  private transformTreeNode(serviceNode: CallTreeNode): TreeNode {
+  private transformTreeNode(serviceNode: CallTreeNode, root?: TreeNode): TreeNode {
     const nodeNumber = this.runningNumber;
     this.runningNumber++;
     const isLeaf = !serviceNode.children || serviceNode.children.length === 0;
@@ -165,37 +164,52 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       expandedCssClass = 'fa-chevron-down';
       leafCssClass = 'fa-folder';
     }
-    return {
+    const result: TreeNode = {
       name: serviceNode.displayName,
       expanded: true,
-      root: null, // initialized later by a forEach on the root node
-      children: serviceNode.children.map(node => this.transformTreeNode(node)),
+      root: null, // initialized later (see below)
+      children: [], // initialized after root was set
       collapsedCssClasses: collapsedCssClass,
       expandedCssClasses: expandedCssClass,
       leafCssClasses: leafCssClass,
       id: 'ID' + nodeNumber,
       hover: 'ID' + nodeNumber + ':'
     };
+    if (root === undefined) {
+      result.root = result;
+    } else {
+      result.root = root;
+    }
+    result.children =  serviceNode.children.map(node => this.transformTreeNode(node, result.root));
+    return result;
   }
 
   // TODO: handle all test runs as opposed to just the first one (i.e. iterate executedCallTree.testRuns as opposed to using element [0])
-  private transformExecutionTree(executedCallTree: ExecutedCallTree): TreeNode {
+  private transformExecutionTree(executedCallTree: ExecutedCallTree, root?: TreeNode): TreeNode {
     const rootID = new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId, executedCallTree.testRuns[0].testRunId);
-    return {
+    const result: TreeNode = {
       name: 'Testrun: ' + executedCallTree.started,
       expanded: true,
-      root: null, // initialized later by a forEach on the root node
-      children: (executedCallTree.testRuns[0].children || []).map(node => this.transformExecutionNode(node, this.treeNode, rootID)),
+      root: null, // initialized later (see below)
+      children: [], // initialized after root was set
       collapsedCssClasses: 'fa-chevron-right',
       expandedCssClasses: 'fa-chevron-down',
       leafCssClasses: 'fa-folder',
       id: rootID.toPathString(),
       hover: `Test Suite [Run] ID: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}]`
     };
+    if (root === undefined) {
+      result.root = result;
+    } else {
+      result.root = root;
+    }
+    result.children = (executedCallTree.testRuns[0].children || [])
+      .map(node => this.transformExecutionNode(node, this.treeNode, rootID, result.root));
+    return result;
   }
 
   private transformExecutionNode(executedCallTreeNode: ExecutedCallTreeNode,
-    original: TreeNode, baseID: TestRunId): TreeNode {
+                                 original: TreeNode, baseID: TestRunId, root: TreeNode): TreeNode {
     let originalChildren: TreeNode[];
 
     if (original) {
@@ -210,17 +224,17 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
     const id = new TestRunId(baseID.testSuiteID, baseID.testSuiteRunID, baseID.testRunID, executedCallTreeNode.id);
 
-    return {
+    const result: TreeNode = {
       name: executedCallTreeNode.message,
       expanded: true,
-      root: null, // initialized later by a forEach on the root node
+      root: root, // initialized later (see below)
       children: this.mergeChildTree(originalChildren, (executedCallTreeNode.children || []).map(
         (node, index) => {
           let originalNode: TreeNode;
           if (originalChildren && originalChildren.length > index) {
             originalNode = originalChildren[index];
           }
-          return this.transformExecutionNode(node, originalNode, id);
+          return this.transformExecutionNode(node, originalNode, id, root);
         })),
       collapsedCssClasses: this.collapsedIcon(executedCallTreeNode) + statusClassString,
       expandedCssClasses: this.expandedIcon(executedCallTreeNode) + statusClassString,
@@ -228,9 +242,8 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       id: id.toPathString(),
       hover: this.hoverFor(executedCallTreeNode)
     };
+    return result;
   }
-
-
 
   private mergeChildTree(originalChildren: TreeNode[], childrenUpdate: TreeNode[]): TreeNode[] {
     // initial naiive implementation to merge the children with planned executions
