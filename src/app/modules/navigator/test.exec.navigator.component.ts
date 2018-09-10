@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef, Output, OnDestroy } from '@angular/core';
-import { TreeNode, TreeViewerConfig } from '@testeditor/testeditor-commons';
+import { TreeNode, TreeViewerConfig, forEach } from '@testeditor/testeditor-commons';
 import { TestCaseService, CallTreeNode } from '../test-case-service/default.test.case.service';
 import { MessagingService } from '@testeditor/messaging-service';
 import { Subscription } from 'rxjs/Subscription';
@@ -19,7 +19,7 @@ interface TestRunCompletedPayload {
   resourceURL: string;
 }
 
-const EMPTY_TREE: TreeNode = { name: '<empty>', children: [] };
+const EMPTY_TREE: TreeNode = { name: '<empty>', root: null, children: [] };
 
 @Component({
   selector: 'app-testexec-navigator',
@@ -85,16 +85,17 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     console.log('call backend for testexecution service');
     this.testCaseService.getCallTree(
       path,
-      (node) => {
+      (callTreeNode) => {
         console.log('got testexec call tree answer from backend');
-        console.log(node);
+        console.log(callTreeNode);
         this.runningNumber = 0;
-        this.treeNode = this.transformTreeNode(node);
+        this.treeNode = this.transformTreeNode(callTreeNode);
         this.testExecutionService.getCallTree(resourceURL, (executedTree) => {
           console.log('get executed tree node');
           console.log(executedTree);
           executedTree.testRuns[0].children.forEach(child => this.updateExecutionStatus(child));
           this.treeNode = this.transformExecutionTree(executedTree);
+          forEach(this.treeNode, (node) => { node.root = this.treeNode; });
           this.treeNode.expanded = true;
           this.treeNode.children.forEach(child => this.updateExpansionStatus(child));
         });
@@ -135,11 +136,12 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     console.log('call backend for testexec call tree');
     this.testCaseService.getCallTree(
       path,
-      (node) => {
+      (callTreeNode) => {
         console.log('got testexec call tree answer from backend');
-        console.log(node);
+        console.log(callTreeNode);
         this.runningNumber = 0;
-        this.treeNode = this.transformTreeNode(node);
+        this.treeNode = this.transformTreeNode(callTreeNode);
+        forEach(this.treeNode, (node) => { node.root = this.treeNode; });
       },
       (error) => {
         console.log(error);
@@ -166,6 +168,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     return {
       name: serviceNode.displayName,
       expanded: true,
+      root: null, // initialized later by a forEach on the root node
       children: serviceNode.children.map(node => this.transformTreeNode(node)),
       collapsedCssClasses: collapsedCssClass,
       expandedCssClasses: expandedCssClass,
@@ -181,6 +184,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     return {
       name: 'Testrun: ' + executedCallTree.started,
       expanded: true,
+      root: null, // initialized later by a forEach on the root node
       children: (executedCallTree.testRuns[0].children || []).map(node => this.transformExecutionNode(node, this.treeNode, rootID)),
       collapsedCssClasses: 'fa-chevron-right',
       expandedCssClasses: 'fa-chevron-down',
@@ -209,6 +213,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     return {
       name: executedCallTreeNode.message,
       expanded: true,
+      root: null, // initialized later by a forEach on the root node
       children: this.mergeChildTree(originalChildren, (executedCallTreeNode.children || []).map(
         (node, index) => {
           let originalNode: TreeNode;
