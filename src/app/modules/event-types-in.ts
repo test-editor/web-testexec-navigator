@@ -5,3 +5,15 @@
 export const TEST_EXECUTE_REQUEST = 'test.execute.request';
 
 export const HTTP_CLIENT_SUPPLIED = 'httpClient.supplied';
+
+export interface TestRunCompletedPayload {
+  path: string;
+  resourceURL: string;
+}
+export const TEST_EXECUTION_FINISHED = 'test.execution.finished';
+
+export interface NavigationOpenPayload {
+  name: string;
+  id: string;
+}
+export const NAVIGATION_OPEN = 'navigation.open';

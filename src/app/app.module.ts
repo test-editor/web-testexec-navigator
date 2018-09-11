@@ -19,7 +19,7 @@ import { HttpProviderService } from './modules/http-provider-service/http-provid
       { testExecutionServiceUrl: 'http://localhost:8080' }),
     MessagingModule.forRoot()
   ],
-  providers: [ HttpProviderService ],
+  providers: [ ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
