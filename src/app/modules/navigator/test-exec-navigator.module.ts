@@ -6,6 +6,7 @@ import { TestCaseServiceConfig } from '../test-case-service/test-case.service.co
 import { TreeViewerModule } from '@testeditor/testeditor-commons';
 import { TestExecutionServiceModule } from '../test-execution-service/test-execution.service.module';
 import { TestExecutionServiceConfig } from '../test-execution-service/test-execution.service.config';
+import { HttpProviderService } from '../http-provider-service/http-provider.service';
 
 @NgModule({
   imports: [
@@ -25,7 +26,8 @@ export class TestExecNavigatorModule {
       ngModule: TestExecNavigatorModule,
       providers: [
         TestCaseServiceModule.forRoot(testCaseServiceConfig).providers,
-        TestExecutionServiceModule.forRoot(testExecutionServiceConfig).providers
+        TestExecutionServiceModule.forRoot(testExecutionServiceConfig).providers,
+        HttpProviderService
       ]
     };
   }

@@ -9,6 +9,6 @@ export const TEST_EXECUTION_START_FAILED = 'test.execution.start.failed';
 
 // a node in the test execution call tree has been selected
 // payload is the TreeNode that was selected.
-export const TEST_NAVIGATION_SELECT = 'test.navigation.select';
+export const TEST_NAVIGATION_SELECT = 'test.navigation.select'; // should be testexectree.navigation.select
 
 export const HTTP_CLIENT_NEEDED = 'httpClient.needed';
