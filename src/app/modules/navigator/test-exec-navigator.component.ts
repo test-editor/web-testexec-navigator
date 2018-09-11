@@ -1,11 +1,12 @@
 import { Component, OnInit, ChangeDetectorRef, Output, OnDestroy } from '@angular/core';
 import { TreeNode, TreeViewerConfig, forEach } from '@testeditor/testeditor-commons';
-import { TestCaseService, CallTreeNode } from '../test-case-service/default.test.case.service';
+import { TestCaseService, CallTreeNode } from '../test-case-service/default-test-case.service';
 import { MessagingService } from '@testeditor/messaging-service';
 import { Subscription } from 'rxjs/Subscription';
-import { TestExecutionService, ExecutedCallTreeNode, ExecutedCallTree } from '../test-execution-service/test.execution.service';
-import { TEST_NAVIGATION_SELECT } from './event-types';
+import { TestExecutionService, ExecutedCallTreeNode, ExecutedCallTree } from '../test-execution-service/test-execution.service';
+import { TEST_NAVIGATION_SELECT, TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED } from '../event-types-out';
 import { TestRunId } from './test-run-id';
+import { TEST_EXECUTE_REQUEST } from '../event-types-in';
 
 const NAVIGATION_OPEN = 'navigation.open';
 const TEST_EXECUTION_FINISHED = 'test.execution.finished';
@@ -23,10 +24,12 @@ const EMPTY_TREE: TreeNode = { name: '<empty>', root: null, children: [] };
 
 @Component({
   selector: 'app-testexec-navigator',
-  templateUrl: './test.exec.navigator.component.html',
-  styleUrls: ['./test.exec.navigator.component.css']
+  templateUrl: './test-exec-navigator.component.html',
+  styleUrls: ['./test-exec-navigator.component.css']
 })
 export class TestExecNavigatorComponent implements OnInit, OnDestroy {
+
+  private testExecutionSubscription: Subscription;
 
   @Output() treeNode: TreeNode = EMPTY_TREE;
   @Output() treeConfig: TreeViewerConfig = {
@@ -49,18 +52,6 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     private testExecutionService: TestExecutionService) {
   }
 
-  get selectedNode(): TreeNode {
-    return this._selectedNode;
-  }
-
-  set selectedNode(node: TreeNode) {
-    if (this._selectedNode) {
-      this._selectedNode.selected = false;
-    }
-    this._selectedNode = node;
-    this._selectedNode.selected = true;
-  }
-
   ngOnInit() {
     console.log('TestExecNavigatorComponent: subscribes for test execution finished');
     this.testRunCompletedSubscription = this.messagingService.subscribe(TEST_EXECUTION_FINISHED,
@@ -73,37 +64,69 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
         this.treeNode = EMPTY_TREE;
       }
     });
+    this.setupTestExecutionListener();
   }
 
   ngOnDestroy() {
     this.navigationSubscription.unsubscribe();
     this.testRunCompletedSubscription.unsubscribe();
+    this.testExecutionSubscription.unsubscribe();
+  }
+
+  setupTestExecutionListener(): void {
+    this.testExecutionSubscription = this.messagingService.subscribe(TEST_EXECUTE_REQUEST, payload => {
+      this.handleExecutionRequest(payload);
+    });
+  }
+
+  async handleExecutionRequest(tclPath: string) {
+    try {
+      const response = await this.testExecutionService.execute(tclPath);
+      this.messagingService.publish(TEST_EXECUTION_STARTED, {
+        path: tclPath,
+        response: response,
+        message: 'Execution of "\${}" has been started.'
+      });
+    } catch (reason) {
+      this.messagingService.publish(TEST_EXECUTION_START_FAILED, {
+        path: tclPath,
+        reason: reason,
+        message: 'The test "\${}" could not be started.'
+      });
+    }
+  }
+
+  get selectedNode(): TreeNode {
+    return this._selectedNode;
+  }
+
+  set selectedNode(node: TreeNode) {
+    if (this._selectedNode) {
+      this._selectedNode.selected = false;
+    }
+    this._selectedNode = node;
+    this._selectedNode.selected = true;
   }
 
   // TODO: handle all test runs as opposed to just the first one (i.e. iterate executedCallTree.testRuns as opposed to using element [0])
-  loadExecutedTreeFor(path: string, resourceURL: string): void {
+  async loadExecutedTreeFor(path: string, resourceURL: string): Promise<void> {
     console.log('call backend for testexecution service');
-    this.testCaseService.getCallTree(
-      path,
-      (callTreeNode) => {
-        console.log('got testexec call tree answer from backend');
-        console.log(callTreeNode);
-        this.runningNumber = 0;
-        this.treeNode = this.transformTreeNode(callTreeNode);
-        this.testExecutionService.getCallTree(resourceURL, (executedTree) => {
-          console.log('get executed tree node');
-          console.log(executedTree);
-          executedTree.testRuns[0].children.forEach(child => this.updateExecutionStatus(child));
-          this.treeNode = this.transformExecutionTree(executedTree);
-          forEach(this.treeNode, (node) => { node.root = this.treeNode; });
-          this.treeNode.expanded = true;
-          this.treeNode.children.forEach(child => this.updateExpansionStatus(child));
-        });
-      },
-      (error) => {
-        console.log(error);
-      }
-    );
+    try {
+      const callTreeNode = await this.testCaseService.getCallTree(path);
+      console.log('got testexec call tree answer from backend');
+      console.log(callTreeNode);
+      this.runningNumber = 0;
+      this.treeNode = this.transformTreeNode(callTreeNode);
+      const executedTree = await this.testExecutionService.getCallTree(resourceURL);
+      console.log('got executed tree node');
+      console.log(executedTree);
+      executedTree.testRuns[0].children.forEach(child => this.updateExecutionStatus(child));
+      this.treeNode = this.transformExecutionTree(executedTree);
+      this.treeNode.expanded = true;
+      this.treeNode.children.forEach(child => this.updateExpansionStatus(child));
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   private updateExpansionStatus(node: TreeNode) {
@@ -132,20 +155,17 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     }
   }
 
-  updateTreeFor(path: string): void {
+  async updateTreeFor(path: string): Promise<void> {
     console.log('call backend for testexec call tree');
-    this.testCaseService.getCallTree(
-      path,
-      (callTreeNode) => {
-        console.log('got testexec call tree answer from backend');
-        console.log(callTreeNode);
-        this.runningNumber = 0;
-        this.treeNode = this.transformTreeNode(callTreeNode);
-      },
-      (error) => {
-        console.log(error);
-      }
-    );
+    try {
+      const callTreeNode = await this.testCaseService.getCallTree(path);
+      console.log('got testexec call tree answer from backend');
+      console.log(callTreeNode);
+      this.runningNumber = 0;
+      this.treeNode = this.transformTreeNode(callTreeNode);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   private transformTreeNode(serviceNode: CallTreeNode, root?: TreeNode): TreeNode {

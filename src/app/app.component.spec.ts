@@ -1,7 +1,8 @@
 import { TestBed, async } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { MessagingModule } from '@testeditor/messaging-service';
-import { TestExecNavigatorModule } from './modules/navigator/test.exec.navigator.module';
+import { TestExecNavigatorModule } from './modules/navigator/test-exec-navigator.module';
+import { HttpProviderService } from './modules/http-provider-service/http-provider.service';
 
 describe('AppComponent', () => {
   beforeEach(async(() => {
@@ -11,6 +12,7 @@ describe('AppComponent', () => {
                                         { testExecutionServiceUrl: 'http://localhost:8080' }),
         MessagingModule.forRoot()
       ],
+      providers: [ HttpProviderService ],
       declarations: [
         AppComponent,
       ],
