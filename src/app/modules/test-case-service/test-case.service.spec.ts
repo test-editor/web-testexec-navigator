@@ -1,10 +1,11 @@
-import { TestBed, inject, fakeAsync } from '@angular/core/testing';
+import { TestBed, inject, fakeAsync, tick } from '@angular/core/testing';
 
-import { DefaultTestCaseService, TestCaseService } from './default.test.case.service';
-import { TestCaseServiceConfig } from './test.case.service.config';
+import { DefaultTestCaseService, TestCaseService } from './default-test-case.service';
+import { TestCaseServiceConfig } from './test-case.service.config';
 import { MessagingService, MessagingModule } from '@testeditor/messaging-service';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
+import { HttpProviderService } from '../http-provider-service/http-provider.service';
 
 describe('TestCaseService', () => {
 
@@ -23,10 +24,11 @@ describe('TestCaseService', () => {
         MessagingModule.forRoot()
       ],
       providers: [
+        HttpProviderService,
+        HttpClient,
         { provide: TestCaseServiceConfig, useValue: serviceConfig },
         { provide: TestCaseService, useClass: DefaultTestCaseService },
-        HttpClient
-      ]
+       ]
     });
 
     messagingService = TestBed.get(MessagingService);
@@ -53,12 +55,10 @@ describe('TestCaseService', () => {
     };
 
     // when
-    testCaseService.getCallTree(tclFilePath,
-
-      // then
-      response => {
-        expect(response).toEqual(expectedCallTreeNode);
-      });
+    testCaseService.getCallTree(tclFilePath).then((response) => {
+      expect(response).toEqual(expectedCallTreeNode);
+    });
+    tick();
 
     httpMock.match(expectedRequest)[0].flush(expectedCallTreeNode);
   })));

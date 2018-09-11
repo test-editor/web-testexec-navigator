@@ -1,14 +1,16 @@
 import { async, ComponentFixture, TestBed, fakeAsync } from '@angular/core/testing';
 
-import { TestExecNavigatorComponent } from './test.exec.navigator.component';
+import { TestExecNavigatorComponent } from './test-exec-navigator.component';
 import { TreeViewerModule } from '@testeditor/testeditor-commons';
 import { MessagingModule, MessagingService } from '@testeditor/messaging-service';
-import { TestCaseService, CallTreeNode, DefaultTestCaseService } from '../test-case-service/default.test.case.service';
-import { mock, instance, capture } from 'ts-mockito';
-import { TestExecutionService, DefaultTestExecutionService } from '../test-execution-service/test.execution.service';
-import { ExecutedCallTree } from '../test-execution-service/test.execution.service';
-import { TEST_NAVIGATION_SELECT } from './event-types';
+import { TestCaseService, CallTreeNode, DefaultTestCaseService } from '../test-case-service/default-test-case.service';
+import { mock, instance, capture, anyString, when } from 'ts-mockito';
+import { ExecutedCallTree, TestExecutionService, DefaultTestExecutionService } from '../test-execution-service/test-execution.service';
+import { TEST_NAVIGATION_SELECT } from '../event-types-out';
 import { By } from '@angular/platform-browser';
+import { HttpProviderService } from '../http-provider-service/http-provider.service';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 describe('TestExecNavigatorComponent', () => {
   let component: TestExecNavigatorComponent;
@@ -20,6 +22,8 @@ describe('TestExecNavigatorComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       imports: [
+        HttpClientModule,
+        HttpClientTestingModule,
         MessagingModule.forRoot(),
         TreeViewerModule
       ],
@@ -27,6 +31,8 @@ describe('TestExecNavigatorComponent', () => {
         TestExecNavigatorComponent
       ],
       providers: [
+        HttpProviderService,
+        HttpClient,
         { provide: TestCaseService, useValue: instance(testCaseServiceMock) },
         { provide: TestExecutionService, useValue: instance(testExecutionServiceMock) }
       ]
@@ -46,7 +52,7 @@ describe('TestExecNavigatorComponent', () => {
   });
 
   it('should provide transformed call tree merged with static call tree from backend (in case of errors during test execution)',
-     fakeAsync(() => {
+     fakeAsync(async () => {
        // given
        const executedTree: ExecutedCallTree = {
          'testSuiteId': '0',
@@ -105,16 +111,11 @@ describe('TestExecNavigatorComponent', () => {
          ]
        };
 
+       when(testCaseServiceMock.getCallTree(anyString())).thenReturn(Promise.resolve(expectedTree));
+       when(testExecutionServiceMock.getCallTree(anyString())).thenReturn(Promise.resolve(executedTree));
+
        // when
-       component.loadExecutedTreeFor('test.tcl', 'http://example.org/test-suite/1234/5678');
-
-       // and when
-       const [ , okFunction, ] = capture(testCaseServiceMock.getCallTree).last();
-       okFunction.apply(null, [expectedTree]);
-
-       // and when
-       const [ , execTreeOkFunction, ] = capture(testExecutionServiceMock.getCallTree).last();
-       execTreeOkFunction.apply(null, [executedTree]);
+       await component.loadExecutedTreeFor('test.tcl', 'http://example.org/test-suite/1234/5678');
 
        // then
        expect(component.treeNode.name).toMatch('Testrun:.*');
@@ -133,7 +134,7 @@ describe('TestExecNavigatorComponent', () => {
        expect(testCaseRoot.expandedCssClasses).toMatch('.*tree-item-in-error.*');
   }));
 
-  it('should provide transformed call tree when loading static call tree expectation from backend', fakeAsync(() => {
+  it('should provide transformed call tree when loading static call tree expectation from backend', fakeAsync(async () => {
     // given
     const node: CallTreeNode = {
       children: [{
@@ -143,13 +144,10 @@ describe('TestExecNavigatorComponent', () => {
       displayName: 'root'
     };
 
+    when(testCaseServiceMock.getCallTree(anyString())).thenReturn(Promise.resolve(node));
+
     // when
-    component.updateTreeFor('test.tcl');
-
-    // and when
-    const [path, okFunc, errorFunc] = capture(testCaseServiceMock.getCallTree).last();
-    okFunc.apply(null, [node]);
-
+    await component.updateTreeFor('test.tcl');
 
     // then
     expect(component.treeNode).toEqual({

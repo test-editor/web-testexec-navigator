@@ -1,9 +1,10 @@
-import { TestExecutionService, DefaultTestExecutionService, ExecutedCallTree } from './test.execution.service';
-import { TestExecutionServiceConfig } from './test.execution.service.config';
-import { inject, TestBed, fakeAsync } from '@angular/core/testing';
+import { TestExecutionService, DefaultTestExecutionService, ExecutedCallTree } from './test-execution.service';
+import { TestExecutionServiceConfig } from './test-execution.service.config';
+import { inject, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { MessagingModule, MessagingService } from '@testeditor/messaging-service';
+import { HttpProviderService } from '../http-provider-service/http-provider.service';
 
 export const HTTP_STATUS_OK = 200;
 export const HTTP_STATUS_CREATED = 201;
@@ -24,10 +25,10 @@ describe('TestExecutionService', () => {
         MessagingModule.forRoot()
       ],
       providers: [
+        HttpProviderService,
+        HttpClient,
         { provide: TestExecutionService, useClass: DefaultTestExecutionService },
         { provide: TestExecutionServiceConfig, useValue: serviceConfig },
-
-        HttpClient
       ]
     });
     messagingService = TestBed.get(MessagingService);
@@ -50,12 +51,13 @@ describe('TestExecutionService', () => {
       const mockResponse: ExecutedCallTree = { testSuiteId: '1234', testSuiteRunId: '5678', resourcePaths: null, testRuns: null };
 
       // when
-      executionService.getCallTree(testSuiteResourceUrl,
+      executionService.getCallTree(testSuiteResourceUrl)
 
-        // then
-       (node) => {
-          expect(node).toEqual({ testSuiteId: '1234', testSuiteRunId: '5678', resourcePaths: null, testRuns: null });
-        });
+      // then
+      .then((node) => {
+        expect(node).toEqual({ testSuiteId: '1234', testSuiteRunId: '5678', resourcePaths: null, testRuns: null });
+      });
+      tick();
 
       httpMock.match(testExecutionRequest)[0].flush(mockResponse);
     })));

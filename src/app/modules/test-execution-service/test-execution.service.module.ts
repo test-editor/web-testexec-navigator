@@ -1,7 +1,7 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TestExecutionServiceConfig } from './test.execution.service.config';
-import { TestExecutionService, DefaultTestExecutionService, ExecutedCallTree, ExecutedCallTreeNode } from './test.execution.service';
+import { TestExecutionServiceConfig } from './test-execution.service.config';
+import { TestExecutionService, DefaultTestExecutionService, ExecutedCallTree, ExecutedCallTreeNode } from './test-execution.service';
 
 @NgModule({
   imports: [
