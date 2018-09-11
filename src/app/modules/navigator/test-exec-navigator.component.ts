@@ -52,7 +52,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     this.log('subscribes for navigation open');
     this.navigationSubscription = this.messagingService.subscribe(NAVIGATION_OPEN, (document: NavigationOpenPayload) => {
       this.log('received NAVIGATION_OPEN', document);
-      if (document.id.endsWith('.tcl')) {
+      if (document.id.toUpperCase().endsWith('.TCL')) {
         this.updateTreeFor(document.id);
       } else {
         this.treeNode = EMPTY_TREE;
