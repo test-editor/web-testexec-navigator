@@ -4,10 +4,6 @@ import { HttpClient } from '@angular/common/http';
 import { MessagingService } from '@testeditor/messaging-service';
 import { HttpProviderService } from '../http-provider-service/http-provider.service';
 
-// code duplication with persistence service and test-editor-web, removal planned with next refactoring
-const HTTP_CLIENT_NEEDED = 'httpClient.needed';
-const HTTP_CLIENT_SUPPLIED = 'httpClient.supplied';
-
 // API provided by service backend
 export class CallTreeNode {
   displayName: string;
@@ -25,7 +21,7 @@ export class DefaultTestCaseService extends TestCaseService {
   private static readonly callTreeURLPath = '/call-tree';
   private serviceUrl: string;
 
-  constructor(config: TestCaseServiceConfig, private messagingService: MessagingService, private httpClientProvider: HttpProviderService) {
+  constructor(config: TestCaseServiceConfig, private httpClientProvider: HttpProviderService) {
     super();
     this.serviceUrl = config.testCaseServiceUrl;
   }

@@ -41,7 +41,7 @@ describe('TestExecutionService', () => {
   });
 
   it('returns ExecutedCallTree json when called', fakeAsync(inject([HttpTestingController, TestExecutionService],
-    async (httpMock: HttpTestingController, executionService: TestExecutionService) => {
+    (httpMock: HttpTestingController, executionService: TestExecutionService) => {
       // given
       const testSuiteResourceUrl = 'http://example.org/test-suite/1234/5678';
       const testExecutionRequest = {

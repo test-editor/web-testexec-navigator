@@ -76,9 +76,9 @@ export class DefaultTestExecutionService extends TestExecutionService {
   private serviceUrl: string;
 
   constructor(config: TestExecutionServiceConfig,
-              private messagingService: MessagingService,
               private httpClientProvider: HttpProviderService) {
     super();
+    this.serviceUrl = config.testExecutionServiceUrl;
   }
 
   async getCallTree(resourceURL: string): Promise<ExecutedCallTree> {
