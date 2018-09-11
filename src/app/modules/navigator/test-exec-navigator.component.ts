@@ -27,8 +27,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     onClick: (node) => {
       this.selectedNode = node;
       this.messagingService.publish(TEST_NAVIGATION_SELECT, node.id);
-      console.log('TestExecNavigatorComponent: sending TEST_NAVIGATION_SELECT');
-      console.log(node.id);
+      this.log('sending TEST_NAVIGATION_SELECT', node.id);
     }
   };
 
