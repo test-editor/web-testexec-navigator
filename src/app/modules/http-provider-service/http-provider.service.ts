@@ -6,6 +6,13 @@ import { HTTP_CLIENT_NEEDED } from '../event-types-out';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/bindCallback';
 
+/*
+ *
+ * COPY OF the provider service within web-test-navigator
+ * Will be moved into commons with next refactoring
+ * -or- won't be necessary if injection with single instance from test-editor-web is possible (has to be checked)
+ */
+
 @Injectable()
 export class HttpProviderService {
 
