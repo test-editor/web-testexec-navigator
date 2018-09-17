@@ -420,6 +420,14 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     }
   }
 
+  getExecuteButtonTitle(): string {
+    if (this.testIsRunning()) {
+      return 'cancel test';
+    } else {
+      return 'execute test';
+    }
+  }
+
   collapseAll(): void {
   }
 

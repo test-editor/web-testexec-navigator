@@ -200,8 +200,7 @@ describe('TestExecNavigatorComponent', () => {
   });
 
   it('ensures that test run button is deactivated on startup', () => {
-    // when
-    fixture.detectChanges();
+    // given + when
 
     // then
     const runButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0].nativeElement;
@@ -251,7 +250,6 @@ describe('TestExecNavigatorComponent', () => {
     // when
     const runButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0].nativeElement;
     runButton.click();
-    fixture.detectChanges();
     tick();
 
     // then
@@ -264,8 +262,7 @@ describe('TestExecNavigatorComponent', () => {
     messagingService.subscribe('test.execution.started', () => {
       testExecutionStarted = true;
     });
-    fixture.detectChanges();
-    when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn();
+    when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve(null));
 
     // when
     messagingService.publish('test.execute.request', 'some/test.tcl');
@@ -312,7 +309,6 @@ describe('TestExecNavigatorComponent', () => {
     when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve(null));
     messagingService.publish('test.execute.request', 'some/test.tcl');
     tick();
-    fixture.detectChanges();
 
     // when
     const testNode: TreeNode = {
