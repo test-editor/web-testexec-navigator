@@ -1,6 +1,6 @@
 import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 
-import { TestExecNavigatorComponent } from './test-exec-navigator.component';
+import { TestExecNavigatorComponent, EMPTY_TREE } from './test-exec-navigator.component';
 import { TreeViewerModule, TreeNode } from '@testeditor/testeditor-commons';
 import { MessagingModule, MessagingService } from '@testeditor/messaging-service';
 import { TestCaseService, CallTreeNode, DefaultTestCaseService } from '../test-case-service/default-test-case.service';
@@ -210,13 +210,17 @@ describe('TestExecNavigatorComponent', () => {
   });
 
   it('activates execute button as soon as a test is available', fakeAsync(() => {
-    // when
+    // given
+    component.treeNode = EMPTY_TREE;
     const testNode: TreeNode = {
       name: 'name',
       root: null,
       children: [],
       id: 'some/test.tcl'
     };
+    when(testCaseServiceMock.getCallTree(testNode.id)).thenReturn(Promise.resolve({ displayName: 'displayName', children: [] }));
+
+    // when
     messagingService.publish('test.selected', testNode);
     tick();
     fixture.detectChanges();
@@ -225,6 +229,7 @@ describe('TestExecNavigatorComponent', () => {
     const runButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0].nativeElement;
     console.log(runButton);
     expect(runButton.disabled).toBeFalsy();
+    expect(component.treeNode.name).toBe('displayName');
   }));
 
   it('sends an execution request when the execute button is pressed (and no test is running)', fakeAsync(() => {
@@ -297,6 +302,29 @@ describe('TestExecNavigatorComponent', () => {
     const cancelButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0];
     console.log(cancelButton);
     expect(cancelButton.properties.className).toContain('fa-play');
+  }));
+
+  it('blocks test selected events if executing a test', fakeAsync(() => {
+    // given
+    component.treeNode = EMPTY_TREE;
+    when(testCaseServiceMock.getCallTree(anyString())).thenReturn(Promise.resolve({ displayName: 'displayName', children: [] }));
+    when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve(null));
+    messagingService.publish('test.execute.request', 'some/test.tcl');
+    tick();
+    fixture.detectChanges();
+
+    // when
+    const testNode: TreeNode = {
+      name: 'name',
+      root: null,
+      children: [],
+      id: 'some/test.tcl'
+    };
+    messagingService.publish('test.selected', testNode);
+    tick();
+
+    // then
+    expect(component.treeNode.name).toBe('<empty>');
   }));
 
   it('switches button back to run if test execution finished', () => {

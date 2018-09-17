@@ -9,7 +9,7 @@ import { TestRunId } from './test-run-id';
 import { TEST_EXECUTE_REQUEST, TEST_EXECUTION_FINISHED, NAVIGATION_OPEN,
   TestRunCompletedPayload, NavigationOpenPayload, TEST_SELECTED, TEST_CANCEL_REQUEST } from '../event-types-in';
 
-const EMPTY_TREE: TreeNode = { name: '<empty>', root: null, children: [] };
+export const EMPTY_TREE: TreeNode = { name: '<empty>', root: null, children: [] };
 
 @Component({
   selector: 'app-testexec-navigator',
@@ -37,7 +37,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   private _selectedNode: TreeNode;
 
-  navigationSubscription: Subscription;
+  testSelectedSubscription: Subscription;
   testRunCompletedSubscription: Subscription;
   runningNumber: number;
 
@@ -47,27 +47,29 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.log('subscribes for test execution finished');
     this.testRunCompletedSubscription =
       this.messagingService.subscribe(TEST_EXECUTION_FINISHED, (testSuiteRun: TestRunCompletedPayload) => {
         this.log('received ' + TEST_EXECUTION_FINISHED, testSuiteRun);
         this.loadExecutedTreeFor(testSuiteRun.path, testSuiteRun.resourceURL);
       });
-    this.log('subscribes for test selected');
-    this.navigationSubscription = this.messagingService.subscribe(TEST_SELECTED, (node: TreeNode) => {
-      this.log('received ' + TEST_SELECTED, node);
-      this.updateTreeFor(node.id);
-      this.testPathSelected = node.id;
-    });
+    this.setupTestSelectedListener();
     this.setupTestExecutionListener();
   }
 
   ngOnDestroy() {
-    this.navigationSubscription.unsubscribe();
+    this.testSelectedSubscription.unsubscribe();
     this.testRunCompletedSubscription.unsubscribe();
     this.testExecutionSubscription.unsubscribe();
     this.testCancelSubscription.unsubscribe();
     this.testExecutionFailedSubscription.unsubscribe();
+  }
+
+  setupTestSelectedListener() {
+    this.testSelectedSubscription = this.messagingService.subscribe(TEST_SELECTED, (node: TreeNode) => {
+      this.log('received ' + TEST_SELECTED, node);
+      this.updateTreeFor(node.id);
+      this.testPathSelected = node.id;
+    });
   }
 
   setupTestExecutionListener(): void {
@@ -102,6 +104,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   async handleExecutionRequest(tclPath: string) {
     try {
+      this.testSelectedSubscription.unsubscribe();
       this.switchToTestCancelButton();
       const response = await this.testExecutionService.execute(tclPath);
       const payload = {
@@ -119,6 +122,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
         message: 'The test "\${}" could not be started.'
       };
       this.messagingService.publish(TEST_EXECUTION_START_FAILED, payload);
+      this.setupTestSelectedListener();
       this.log('sending TEST_EXECUTION_START_FAILED', payload);
     }
   }
