@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef, Output, OnDestroy, isDevMode } from '@angular/core';
-import { TreeNode, TreeViewerConfig, forEach } from '@testeditor/testeditor-commons';
+import { TreeNode, TreeViewerConfig, forEach, TREE_NODE_SELECTED } from '@testeditor/testeditor-commons';
 import { TestCaseService, CallTreeNode } from '../test-case-service/default-test-case.service';
 import { MessagingService } from '@testeditor/messaging-service';
 import { Subscription } from 'rxjs/Subscription';
@@ -7,7 +7,7 @@ import { TestExecutionService, ExecutedCallTreeNode, ExecutedCallTree } from '..
 import { TEST_NAVIGATION_SELECT, TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED } from '../event-types-out';
 import { TestRunId } from './test-run-id';
 import { TEST_EXECUTE_REQUEST, TEST_EXECUTION_FINISHED, NAVIGATION_OPEN,
-         TestRunCompletedPayload, NavigationOpenPayload } from '../event-types-in';
+  TestRunCompletedPayload, NavigationOpenPayload, TEST_SELECTED, TEST_CANCEL_REQUEST } from '../event-types-in';
 
 const EMPTY_TREE: TreeNode = { name: '<empty>', root: null, children: [] };
 
@@ -18,7 +18,11 @@ const EMPTY_TREE: TreeNode = { name: '<empty>', root: null, children: [] };
 })
 export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
+  private runCancelButtonClass = 'fa-play';
   private testExecutionSubscription: Subscription;
+  private testExecutionFailedSubscription: Subscription;
+  private testCancelSubscription: Subscription;
+  private testPathSelected: string = null;
 
   @Output() treeNode: TreeNode = EMPTY_TREE;
   @Output() treeConfig: TreeViewerConfig = {
@@ -46,17 +50,14 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     this.log('subscribes for test execution finished');
     this.testRunCompletedSubscription =
       this.messagingService.subscribe(TEST_EXECUTION_FINISHED, (testSuiteRun: TestRunCompletedPayload) => {
-        this.log('received TEST_EXECUTION_FINISHED', testSuiteRun);
+        this.log('received ' + TEST_EXECUTION_FINISHED, testSuiteRun);
         this.loadExecutedTreeFor(testSuiteRun.path, testSuiteRun.resourceURL);
       });
-    this.log('subscribes for navigation open');
-    this.navigationSubscription = this.messagingService.subscribe(NAVIGATION_OPEN, (document: NavigationOpenPayload) => {
-      this.log('received NAVIGATION_OPEN', document);
-      if (document.id.toUpperCase().endsWith('.TCL')) {
-        this.updateTreeFor(document.id);
-      } else {
-        this.treeNode = EMPTY_TREE;
-      }
+    this.log('subscribes for test selected');
+    this.navigationSubscription = this.messagingService.subscribe(TEST_SELECTED, (node: TreeNode) => {
+      this.log('received ' + TEST_SELECTED, node);
+      this.updateTreeFor(node.id);
+      this.testPathSelected = node.id;
     });
     this.setupTestExecutionListener();
   }
@@ -65,12 +66,24 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     this.navigationSubscription.unsubscribe();
     this.testRunCompletedSubscription.unsubscribe();
     this.testExecutionSubscription.unsubscribe();
+    this.testCancelSubscription.unsubscribe();
+    this.testExecutionFailedSubscription.unsubscribe();
   }
 
   setupTestExecutionListener(): void {
+    this.testCancelSubscription = this.messagingService.subscribe(TEST_CANCEL_REQUEST, () => {
+      this.log('received ' + TEST_CANCEL_REQUEST);
+      this.handleCancelRequest();
+    });
     this.testExecutionSubscription = this.messagingService.subscribe(TEST_EXECUTE_REQUEST, payload => {
-      this.log('received NAVIGATION_OPEN', payload);
+      this.log('received ' + TEST_EXECUTE_REQUEST, payload);
       this.handleExecutionRequest(payload);
+    });
+    this.testExecutionSubscription = this.messagingService.subscribe(TEST_EXECUTION_STARTED, payload => {
+      this.log('received ' + TEST_EXECUTION_STARTED, payload);
+    });
+    this.testExecutionFailedSubscription = this.messagingService.subscribe(TEST_EXECUTION_START_FAILED, payload => {
+      this.log('received ' + TEST_EXECUTION_START_FAILED, payload);
     });
   }
 
@@ -83,8 +96,13 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     }
   }
 
+  handleCancelRequest(): void {
+    // TODO: to be implemented
+  }
+
   async handleExecutionRequest(tclPath: string) {
     try {
+      this.switchToTestCancelButton();
       const response = await this.testExecutionService.execute(tclPath);
       const payload = {
         path: tclPath,
@@ -94,6 +112,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       this.messagingService.publish(TEST_EXECUTION_STARTED, payload);
       this.log('sending TEST_EXECUTION_STARTED', payload);
     } catch (reason) {
+      this.switchToTestRunButton();
       const payload = {
         path: tclPath,
         reason: reason,
@@ -102,6 +121,14 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       this.messagingService.publish(TEST_EXECUTION_START_FAILED, payload);
       this.log('sending TEST_EXECUTION_START_FAILED', payload);
     }
+  }
+
+  private switchToTestCancelButton(): void {
+    this.runCancelButtonClass = 'fa-stop-circle-o';
+  }
+
+  private switchToTestRunButton(): void {
+    this.runCancelButtonClass = 'fa-play';
   }
 
   get selectedNode(): TreeNode {
@@ -364,6 +391,32 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     } else {
       return undefined;
     }
+  }
+
+  /** controls availability of test execution button */
+  selectionIsExecutable(): boolean {
+    return this.testPathSelected != null;
+  }
+
+  testIsRunning(): boolean {
+    return this.runCancelButtonClass !== 'fa-play'; // TODO: <-- change that
+  }
+
+  run(): void {
+    if (this.selectionIsExecutable()) {
+      if (this.testIsRunning()) {
+        this.messagingService.publish(TEST_CANCEL_REQUEST, null);
+        this.log('published ' + TEST_CANCEL_REQUEST);
+      } else {
+        this.messagingService.publish(TEST_EXECUTE_REQUEST, this.testPathSelected);
+        this.log('published ' + TEST_EXECUTE_REQUEST, this.testPathSelected);
+      }
+    } else {
+      this.log('WARNING: trying to execute/stop test, but no test case file is selected/running.');
+    }
+  }
+
+  collapseAll(): void {
   }
 
 }
