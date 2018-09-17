@@ -227,16 +227,15 @@ describe('TestExecNavigatorComponent', () => {
 
     // then
     const runButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0].nativeElement;
-    console.log(runButton);
     expect(runButton.disabled).toBeFalsy();
     expect(component.treeNode.name).toBe('displayName');
   }));
 
   it('sends an execution request when the execute button is pressed (and no test is running)', fakeAsync(() => {
     // given
-    let requested = false;
+    let testExecutionRequested = false;
     messagingService.subscribe('test.execute.request', () => {
-      requested = true;
+      testExecutionRequested = true;
     });
     const testNode: TreeNode = {
       name: 'name',
@@ -256,7 +255,7 @@ describe('TestExecNavigatorComponent', () => {
     tick();
 
     // then
-    expect(requested).toBeTruthy();
+    expect(testExecutionRequested).toBeTruthy();
   }));
 
   it('executes a test if the request is received', fakeAsync(() => {
@@ -277,6 +276,7 @@ describe('TestExecNavigatorComponent', () => {
   }));
 
   it('switches button to cancel if a test execution was started', fakeAsync(() => {
+    // given
     when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve(null));
 
     // when
@@ -286,11 +286,11 @@ describe('TestExecNavigatorComponent', () => {
 
     // then
     const cancelButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0];
-    console.log(cancelButton);
     expect(cancelButton.properties.className).toContain('fa-stop-circle-o');
   }));
 
   it('switches button back to run if test execution failed to start', fakeAsync(() => {
+    // given
     when(testExecutionServiceMock.execute('some/test.tcl')).thenThrow(new Error());
 
     // when
@@ -300,13 +300,14 @@ describe('TestExecNavigatorComponent', () => {
 
     // then
     const cancelButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0];
-    console.log(cancelButton);
     expect(cancelButton.properties.className).toContain('fa-play');
   }));
 
   it('blocks test selected events if executing a test', fakeAsync(() => {
     // given
     component.treeNode = EMPTY_TREE;
+    // the following mock is nevery really used (which this test should proove),
+    // but if it were used, it would change component.treeNode.name
     when(testCaseServiceMock.getCallTree(anyString())).thenReturn(Promise.resolve({ displayName: 'displayName', children: [] }));
     when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve(null));
     messagingService.publish('test.execute.request', 'some/test.tcl');
