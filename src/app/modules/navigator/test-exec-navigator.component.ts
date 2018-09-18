@@ -3,11 +3,16 @@ import { TreeNode, TreeViewerConfig, forEach, TREE_NODE_SELECTED } from '@tested
 import { TestCaseService, CallTreeNode } from '../test-case-service/default-test-case.service';
 import { MessagingService } from '@testeditor/messaging-service';
 import { Subscription } from 'rxjs/Subscription';
-import { TestExecutionService, ExecutedCallTreeNode, ExecutedCallTree } from '../test-execution-service/test-execution.service';
-import { TEST_NAVIGATION_SELECT, TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED } from '../event-types-out';
+import { TestSuiteExecutionStatus, TestExecutionService,
+         ExecutedCallTreeNode, ExecutedCallTree } from '../test-execution-service/test-execution.service';
+import { TestExecutionState } from '../test-execution-service/test-execution-state';
+import { TEST_NAVIGATION_SELECT, TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED,
+         TestRunCompletedPayload, TEST_EXECUTION_FINISHED, TEST_EXECUTION_FAILED } from '../event-types-out';
+import { TEST_EXECUTE_REQUEST, NAVIGATION_OPEN,
+         NavigationOpenPayload, TEST_SELECTED, TEST_CANCEL_REQUEST } from '../event-types-in';
 import { TestRunId } from './test-run-id';
-import { TEST_EXECUTE_REQUEST, TEST_EXECUTION_FINISHED, NAVIGATION_OPEN,
-  TestRunCompletedPayload, NavigationOpenPayload, TEST_SELECTED, TEST_CANCEL_REQUEST } from '../event-types-in';
+import { Subject } from 'rxjs/Subject';
+import { idPrefix } from '../module-constants';
 
 export const EMPTY_TREE: TreeNode = { name: '<empty>', root: null, children: [] };
 
@@ -17,8 +22,9 @@ export const EMPTY_TREE: TreeNode = { name: '<empty>', root: null, children: [] 
   styleUrls: ['./test-exec-navigator.component.css']
 })
 export class TestExecNavigatorComponent implements OnInit, OnDestroy {
-  readonly cancelIcon = 'fa-stop';
+  readonly cancelIcon = 'fa-stop pulse';
   readonly executeIcon = 'fa-play';
+  readonly idPrefix = idPrefix;
 
   private runCancelButtonClass = this.executeIcon;
   private testExecutionSubscription: Subscription;
@@ -41,6 +47,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   testSelectedSubscription: Subscription;
   testRunCompletedSubscription: Subscription;
+  testRunFailedSubscription: Subscription;
   runningNumber: number;
 
   constructor(private messagingService: MessagingService,
@@ -49,11 +56,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.testRunCompletedSubscription =
-      this.messagingService.subscribe(TEST_EXECUTION_FINISHED, (testSuiteRun: TestRunCompletedPayload) => {
-        this.log('received ' + TEST_EXECUTION_FINISHED, testSuiteRun);
-        this.loadExecutedTreeFor(testSuiteRun.path, testSuiteRun.resourceURL);
-      });
+    this.setupTestExecutionFinishedListener();
     this.setupTestSelectedListener();
     this.setupTestExecutionListener();
   }
@@ -64,6 +67,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     this.testExecutionSubscription.unsubscribe();
     this.testCancelSubscription.unsubscribe();
     this.testExecutionFailedSubscription.unsubscribe();
+    this.testRunFailedSubscription.unsubscribe();
   }
 
   setupTestSelectedListener() {
@@ -72,6 +76,21 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       this.updateTreeFor(node.id);
       this.testPathSelected = node.id;
     });
+  }
+
+  setupTestExecutionFinishedListener(): void {
+    this.testRunCompletedSubscription =
+      this.messagingService.subscribe(TEST_EXECUTION_FINISHED, (testSuiteRun: TestRunCompletedPayload) => {
+        this.log('received ' + TEST_EXECUTION_FINISHED, testSuiteRun);
+        this.loadExecutedTreeFor(testSuiteRun.path, testSuiteRun.resourceURL);
+        this.switchToIdleStatus();
+      });
+    this.testRunFailedSubscription =
+      this.messagingService.subscribe(TEST_EXECUTION_FAILED, (testSuiteRun: TestRunCompletedPayload) => {
+        this.log('received ' + TEST_EXECUTION_FAILED, testSuiteRun);
+        this.loadExecutedTreeFor(testSuiteRun.path, testSuiteRun.resourceURL);
+        this.switchToIdleStatus();
+      });
   }
 
   setupTestExecutionListener(): void {
@@ -106,8 +125,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   async handleExecutionRequest(tclPath: string) {
     try {
-      this.testSelectedSubscription.unsubscribe();
-      this.switchToTestCancelButton();
+      this.switchToTestCurrentlyRunningStatus();
       const response = await this.testExecutionService.execute(tclPath);
       const payload = {
         path: tclPath,
@@ -116,25 +134,59 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       };
       this.messagingService.publish(TEST_EXECUTION_STARTED, payload);
       this.log('sending TEST_EXECUTION_STARTED', payload);
+      await this.testExecutionObserver(response, tclPath);
+      this.switchToIdleStatus();
     } catch (reason) {
-      this.switchToTestRunButton();
+      this.switchToIdleStatus();
       const payload = {
         path: tclPath,
         reason: reason,
         message: 'The test "\${}" could not be started.'
       };
       this.messagingService.publish(TEST_EXECUTION_START_FAILED, payload);
-      this.setupTestSelectedListener();
       this.log('sending TEST_EXECUTION_START_FAILED', payload);
     }
   }
 
-  private switchToTestCancelButton(): void {
+  async testExecutionObserver(testId: string, tclPath: string) {
+    let suiteStatus: TestSuiteExecutionStatus;
+    let executionStatus = TestExecutionState.Running;
+    while (executionStatus === TestExecutionState.Running) {
+      this.log('polling test status from', testId);
+      suiteStatus = await this.testExecutionService.getStatus(testId);
+      this.log('got status', suiteStatus);
+      executionStatus = suiteStatus.status;
+    }
+    this.log('got final test status', suiteStatus);
+    const result: TestRunCompletedPayload = {
+      path: tclPath,
+      resourceURL: testId
+    };
+    switch (executionStatus) {
+      case TestExecutionState.LastRunFailed: {
+        this.messagingService.publish(TEST_EXECUTION_FAILED, result);
+        break;
+      }
+      case TestExecutionState.LastRunSuccessful: {
+        this.messagingService.publish(TEST_EXECUTION_FINISHED, result);
+        break;
+      }
+      default: {
+        this.log('ERROR: test execution ended neither successful nor did it fail', suiteStatus);
+      }
+    }
+  }
+
+  /** visible for testing */
+  public switchToTestCurrentlyRunningStatus(): void {
+    this.testSelectedSubscription.unsubscribe();
     this.runCancelButtonClass = this.cancelIcon;
   }
 
-  private switchToTestRunButton(): void {
+  /** visible for testing */
+  public switchToIdleStatus(): void {
     this.runCancelButtonClass = this.executeIcon;
+    this.setupTestSelectedListener();
   }
 
   get selectedNode(): TreeNode {
