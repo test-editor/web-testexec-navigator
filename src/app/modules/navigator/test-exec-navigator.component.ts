@@ -6,11 +6,13 @@ import { Subscription } from 'rxjs/Subscription';
 import { TestSuiteExecutionStatus, TestExecutionService,
          ExecutedCallTreeNode, ExecutedCallTree } from '../test-execution-service/test-execution.service';
 import { TestExecutionState } from '../test-execution-service/test-execution-state';
-import { TEST_NAVIGATION_SELECT, TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED } from '../event-types-out';
+import { TEST_NAVIGATION_SELECT, TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED,
+         TestRunCompletedPayload, TEST_EXECUTION_FINISHED, TEST_EXECUTION_FAILED } from '../event-types-out';
+import { TEST_EXECUTE_REQUEST, NAVIGATION_OPEN,
+         NavigationOpenPayload, TEST_SELECTED, TEST_CANCEL_REQUEST } from '../event-types-in';
 import { TestRunId } from './test-run-id';
-import { TEST_EXECUTE_REQUEST, TEST_EXECUTION_FINISHED, NAVIGATION_OPEN,
-         TestRunCompletedPayload, NavigationOpenPayload, TEST_SELECTED, TEST_CANCEL_REQUEST } from '../event-types-in';
 import { Subject } from 'rxjs/Subject';
+import { idPrefix } from '../module-constants';
 
 export const EMPTY_TREE: TreeNode = { name: '<empty>', root: null, children: [] };
 
@@ -22,6 +24,7 @@ export const EMPTY_TREE: TreeNode = { name: '<empty>', root: null, children: [] 
 export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   readonly cancelIcon = 'fa-stop pulse';
   readonly executeIcon = 'fa-play';
+  readonly idPrefix = idPrefix;
 
   private runCancelButtonClass = this.executeIcon;
   private testExecutionSubscription: Subscription;
@@ -149,7 +152,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     };
     switch (executionStatus) {
       case TestExecutionState.LastRunFailed: {
-        this.messagingService.publish(TEST_EXECUTION_FINISHED, result);
+        this.messagingService.publish(TEST_EXECUTION_FAILED, result);
         break;
       }
       case TestExecutionState.LastRunSuccessful: {

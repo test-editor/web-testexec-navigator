@@ -11,4 +11,11 @@ export const TEST_EXECUTION_START_FAILED = 'test.execution.start.failed';
 // payload is the TreeNode that was selected.
 export const TEST_NAVIGATION_SELECT = 'test.navigation.select'; // should be testexectree.navigation.select
 
+export interface TestRunCompletedPayload {
+  path: string;
+  resourceURL: string;
+}
+export const TEST_EXECUTION_FINISHED = 'test.execution.finished';
+export const TEST_EXECUTION_FAILED = 'test.execution.failed';
+
 export const HTTP_CLIENT_NEEDED = 'httpClient.needed';

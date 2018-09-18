@@ -12,6 +12,7 @@ import { HttpProviderService } from '../http-provider-service/http-provider.serv
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TestExecutionState } from '../test-execution-service/test-execution-state';
+import { idPrefix } from '../module-constants';
 
 describe('TestExecNavigatorComponent', () => {
   let component: TestExecNavigatorComponent;
@@ -204,7 +205,7 @@ describe('TestExecNavigatorComponent', () => {
     // given + when
 
     // then
-    const runButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0].nativeElement;
+    const runButton = fixture.debugElement.queryAll(By.css('button[id=' + idPrefix + 'icon-run]'))[0].nativeElement;
     console.log(runButton);
     expect(runButton.disabled).toBeTruthy();
   });
@@ -226,7 +227,7 @@ describe('TestExecNavigatorComponent', () => {
     fixture.detectChanges();
 
     // then
-    const runButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0].nativeElement;
+    const runButton = fixture.debugElement.queryAll(By.css('button[id=' + idPrefix + 'icon-run]'))[0].nativeElement;
     expect(runButton.disabled).toBeFalsy();
     expect(component.treeNode.name).toBe('displayName');
   }));
@@ -249,7 +250,7 @@ describe('TestExecNavigatorComponent', () => {
     fixture.detectChanges();
 
     // when
-    const runButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0].nativeElement;
+    const runButton = fixture.debugElement.queryAll(By.css('button[id=' + idPrefix + 'icon-run]'))[0].nativeElement;
     runButton.click();
     tick();
 

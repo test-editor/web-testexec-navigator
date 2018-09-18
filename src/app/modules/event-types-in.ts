@@ -8,12 +8,6 @@ export const TEST_CANCEL_REQUEST = 'test.cancel.request';
 
 export const HTTP_CLIENT_SUPPLIED = 'httpClient.supplied';
 
-export interface TestRunCompletedPayload {
-  path: string;
-  resourceURL: string;
-}
-export const TEST_EXECUTION_FINISHED = 'test.execution.finished';
-
 export interface NavigationOpenPayload {
   name: string;
   id: string;
