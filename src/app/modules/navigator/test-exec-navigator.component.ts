@@ -47,6 +47,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   testSelectedSubscription: Subscription;
   testRunCompletedSubscription: Subscription;
+  testRunFailedSubscription: Subscription;
   runningNumber: number;
 
   constructor(private messagingService: MessagingService,
@@ -55,12 +56,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.testRunCompletedSubscription =
-      this.messagingService.subscribe(TEST_EXECUTION_FINISHED, (testSuiteRun: TestRunCompletedPayload) => {
-        this.log('received ' + TEST_EXECUTION_FINISHED, testSuiteRun);
-        this.loadExecutedTreeFor(testSuiteRun.path, testSuiteRun.resourceURL);
-        this.switchToIdleStatus();
-      });
+    this.setupTestExecutionFinishedListener();
     this.setupTestSelectedListener();
     this.setupTestExecutionListener();
   }
@@ -71,6 +67,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     this.testExecutionSubscription.unsubscribe();
     this.testCancelSubscription.unsubscribe();
     this.testExecutionFailedSubscription.unsubscribe();
+    this.testRunFailedSubscription.unsubscribe();
   }
 
   setupTestSelectedListener() {
@@ -79,6 +76,21 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       this.updateTreeFor(node.id);
       this.testPathSelected = node.id;
     });
+  }
+
+  setupTestExecutionFinishedListener(): void {
+    this.testRunCompletedSubscription =
+      this.messagingService.subscribe(TEST_EXECUTION_FINISHED, (testSuiteRun: TestRunCompletedPayload) => {
+        this.log('received ' + TEST_EXECUTION_FINISHED, testSuiteRun);
+        this.loadExecutedTreeFor(testSuiteRun.path, testSuiteRun.resourceURL);
+        this.switchToIdleStatus();
+      });
+    this.testRunFailedSubscription =
+      this.messagingService.subscribe(TEST_EXECUTION_FAILED, (testSuiteRun: TestRunCompletedPayload) => {
+        this.log('received ' + TEST_EXECUTION_FAILED, testSuiteRun);
+        this.loadExecutedTreeFor(testSuiteRun.path, testSuiteRun.resourceURL);
+        this.switchToIdleStatus();
+      });
   }
 
   setupTestExecutionListener(): void {
