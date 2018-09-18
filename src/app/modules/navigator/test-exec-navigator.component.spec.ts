@@ -11,6 +11,7 @@ import { By } from '@angular/platform-browser';
 import { HttpProviderService } from '../http-provider-service/http-provider.service';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { TestExecutionState } from '../test-execution-service/test-execution-state';
 
 describe('TestExecNavigatorComponent', () => {
   let component: TestExecNavigatorComponent;
@@ -274,20 +275,24 @@ describe('TestExecNavigatorComponent', () => {
 
   it('switches button to cancel if a test execution was started', fakeAsync(() => {
     // given
-    when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve(null));
+    spyOn(component, 'switchToTestCurrentRunningStatus');
+    when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve('someURL'));
+    when(testExecutionServiceMock.getStatus(anyString())).thenReturn(
+      Promise. resolve({ resourceURL: 'some', status: TestExecutionState.Running }),
+      Promise. resolve({ resourceURL: 'some', status: TestExecutionState.LastRunSuccessful })
+    );
 
     // when
     messagingService.publish('test.execute.request', 'some/test.tcl');
     tick();
-    fixture.detectChanges();
 
     // then
-    const cancelButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0];
-    expect(cancelButton.properties.className).toContain(component.cancelIcon);
+    expect(component.switchToTestCurrentRunningStatus).toHaveBeenCalled();
   }));
 
   it('switches button back to run if test execution failed to start', fakeAsync(() => {
     // given
+    spyOn(component, 'switchToIdleStatus');
     when(testExecutionServiceMock.execute('some/test.tcl')).thenThrow(new Error());
 
     // when
@@ -296,16 +301,13 @@ describe('TestExecNavigatorComponent', () => {
     fixture.detectChanges();
 
     // then
-    const cancelButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0];
-    expect(cancelButton.properties.className).toContain(component.executeIcon);
+    expect(component.switchToIdleStatus).toHaveBeenCalled();
   }));
 
   it('blocks test selected events if executing a test', fakeAsync(() => {
     // given
     component.treeNode = EMPTY_TREE;
-    when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve(null));
-    messagingService.publish('test.execute.request', 'some/test.tcl');
-    tick();
+    component.switchToTestCurrentRunningStatus();
 
     // when
     const testNode: TreeNode = {
