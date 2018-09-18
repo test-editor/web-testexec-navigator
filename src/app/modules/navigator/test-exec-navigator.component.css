@@ -1,3 +1,18 @@
+.test-exec-navigator {
+  flex-grow: 0;
+  height: 100%;
+  z-index: 1;
+  background-color: #252525;
+  resize: horizontal;
+  position: relative;
+}
+
+.test-tree {
+  overflow-y: auto; /* vertical scroll bar should automatically appear */
+  overflow-x: hidden; /* since tree content is cut (ellipsis added), never show horizontal scrol bar */
+  height: calc(100% - 34px); /* -34 px occupied by the icon button bar! */
+}
+
 .icon-menu {
   padding: 5px;
 }

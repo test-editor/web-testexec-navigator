@@ -1,4 +1,4 @@
-<div [id]="idPrefix+'test-exec-navigator'">
+<div [id]="idPrefix+'test-exec-navigator'" class="test-exec-navigator">
   <div class="icon-menu" [id]="idPrefix+'icon-menu'">
     <div class="icons-left" [id]="idPrefix+'icon-menu-left'">
       <button [id]="idPrefix+'icon-run'" [class]="'icon fa ' + runCancelButtonClass" (click)="run()" [disabled]="!selectionIsExecutable()" [title]="getExecuteButtonTitle()"></button>
@@ -7,5 +7,7 @@
       <button [id]="idPrefix+'icon-collapse-all'" class="icon fa fa-minus-square-o" aria-hidden="true" (click)="collapseAll()" title="collapse all"></button>
     </div>
   </div>
-  <app-tree-viewer [model]="treeNode" [level]="0" [config]="treeConfig"></app-tree-viewer>
+  <div [id]="idPrefix + 'test-tree'" class="test-tree">
+    <app-tree-viewer [model]="treeNode" [level]="0" [config]="treeConfig"></app-tree-viewer>
+  </div>
 </div>
