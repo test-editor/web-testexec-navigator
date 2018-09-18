@@ -4,7 +4,7 @@ import { TestExecNavigatorComponent, EMPTY_TREE } from './test-exec-navigator.co
 import { TreeViewerModule, TreeNode } from '@testeditor/testeditor-commons';
 import { MessagingModule, MessagingService } from '@testeditor/messaging-service';
 import { TestCaseService, CallTreeNode, DefaultTestCaseService } from '../test-case-service/default-test-case.service';
-import { mock, instance, capture, anyString, when, resetCalls } from 'ts-mockito';
+import { mock, instance, capture, anyString, when, resetCalls, verify } from 'ts-mockito';
 import { ExecutedCallTree, TestExecutionService, DefaultTestExecutionService } from '../test-execution-service/test-execution.service';
 import { TEST_NAVIGATION_SELECT } from '../event-types-out';
 import { By } from '@angular/platform-browser';
@@ -283,7 +283,7 @@ describe('TestExecNavigatorComponent', () => {
 
     // then
     const cancelButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0];
-    expect(cancelButton.properties.className).toContain('fa-stop-circle-o');
+    expect(cancelButton.properties.className).toContain(component.cancelIcon);
   }));
 
   it('switches button back to run if test execution failed to start', fakeAsync(() => {
@@ -297,15 +297,12 @@ describe('TestExecNavigatorComponent', () => {
 
     // then
     const cancelButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0];
-    expect(cancelButton.properties.className).toContain('fa-play');
+    expect(cancelButton.properties.className).toContain(component.executeIcon);
   }));
 
   it('blocks test selected events if executing a test', fakeAsync(() => {
     // given
     component.treeNode = EMPTY_TREE;
-    // the following mock is nevery really used (which this test should proove),
-    // but if it were used, it would change component.treeNode.name
-    when(testCaseServiceMock.getCallTree(anyString())).thenReturn(Promise.resolve({ displayName: 'displayName', children: [] }));
     when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve(null));
     messagingService.publish('test.execute.request', 'some/test.tcl');
     tick();
@@ -322,6 +319,7 @@ describe('TestExecNavigatorComponent', () => {
 
     // then
     expect(component.treeNode.name).toBe('<empty>');
+    verify(testCaseServiceMock.getCallTree(anyString())).never();
   }));
 
   it('switches button back to run if test execution finished', () => {

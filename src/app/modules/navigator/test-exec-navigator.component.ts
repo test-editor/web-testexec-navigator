@@ -17,8 +17,10 @@ export const EMPTY_TREE: TreeNode = { name: '<empty>', root: null, children: [] 
   styleUrls: ['./test-exec-navigator.component.css']
 })
 export class TestExecNavigatorComponent implements OnInit, OnDestroy {
+  readonly cancelIcon = 'fa-stop';
+  readonly executeIcon = 'fa-play';
 
-  private runCancelButtonClass = 'fa-play';
+  private runCancelButtonClass = this.executeIcon;
   private testExecutionSubscription: Subscription;
   private testExecutionFailedSubscription: Subscription;
   private testCancelSubscription: Subscription;
@@ -128,11 +130,11 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   private switchToTestCancelButton(): void {
-    this.runCancelButtonClass = 'fa-stop-circle-o';
+    this.runCancelButtonClass = this.cancelIcon;
   }
 
   private switchToTestRunButton(): void {
-    this.runCancelButtonClass = 'fa-play';
+    this.runCancelButtonClass = this.executeIcon;
   }
 
   get selectedNode(): TreeNode {
@@ -403,7 +405,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   testIsRunning(): boolean {
-    return this.runCancelButtonClass !== 'fa-play'; // TODO: <-- change that
+    return this.runCancelButtonClass !== this.executeIcon; // TODO: <-- change that
   }
 
   run(): void {
