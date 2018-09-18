@@ -275,7 +275,7 @@ describe('TestExecNavigatorComponent', () => {
 
   it('switches button to cancel if a test execution was started', fakeAsync(() => {
     // given
-    spyOn(component, 'switchToTestCurrentRunningStatus');
+    spyOn(component, 'switchToTestCurrentlyRunningStatus');
     when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve('someURL'));
     when(testExecutionServiceMock.getStatus(anyString())).thenReturn(
       Promise. resolve({ resourceURL: 'some', status: TestExecutionState.Running }),
@@ -287,7 +287,7 @@ describe('TestExecNavigatorComponent', () => {
     tick();
 
     // then
-    expect(component.switchToTestCurrentRunningStatus).toHaveBeenCalled();
+    expect(component.switchToTestCurrentlyRunningStatus).toHaveBeenCalled();
   }));
 
   it('switches button back to run if test execution failed to start', fakeAsync(() => {
@@ -307,7 +307,7 @@ describe('TestExecNavigatorComponent', () => {
   it('blocks test selected events if executing a test', fakeAsync(() => {
     // given
     component.treeNode = EMPTY_TREE;
-    component.switchToTestCurrentRunningStatus();
+    component.switchToTestCurrentlyRunningStatus();
 
     // when
     const testNode: TreeNode = {

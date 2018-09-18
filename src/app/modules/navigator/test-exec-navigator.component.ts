@@ -110,7 +110,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   async handleExecutionRequest(tclPath: string) {
     try {
-      this.switchToTestCurrentRunningStatus();
+      this.switchToTestCurrentlyRunningStatus();
       const response = await this.testExecutionService.execute(tclPath);
       const payload = {
         path: tclPath,
@@ -120,6 +120,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       this.messagingService.publish(TEST_EXECUTION_STARTED, payload);
       this.log('sending TEST_EXECUTION_STARTED', payload);
       await this.testExecutionObserver(response, tclPath);
+      this.switchToIdleStatus();
     } catch (reason) {
       this.switchToIdleStatus();
       const payload = {
@@ -156,13 +157,13 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
         break;
       }
       default: {
-        this.log('ERROR: test eexecution ended neither successful nor did it fail', suiteStatus);
+        this.log('ERROR: test execution ended neither successful nor did it fail', suiteStatus);
       }
     }
   }
 
   /** visible for testing */
-  public switchToTestCurrentRunningStatus(): void {
+  public switchToTestCurrentlyRunningStatus(): void {
     this.testSelectedSubscription.unsubscribe();
     this.runCancelButtonClass = this.cancelIcon;
   }
