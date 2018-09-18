@@ -159,7 +159,7 @@ describe('TestExecNavigatorComponent', () => {
       expandedCssClasses: 'fa-chevron-down',
       leafCssClasses: 'fa-folder',
       id: 'ID0',
-      hover: 'ID0:',
+      hover: 'not executed yet',
       root: component.treeNode,
       children: [
         {
@@ -171,7 +171,7 @@ describe('TestExecNavigatorComponent', () => {
           expandedCssClasses: 'fa-circle',
           leafCssClasses: 'fa-circle',
           id: 'ID1',
-          hover: 'ID1:'
+          hover: 'not executed yet'
         }
       ]
     });
