@@ -3,6 +3,8 @@
 // request execution of a test case,
 // payload is the absolute path of the respective tcl
 export const TEST_EXECUTE_REQUEST = 'test.execute.request';
+// no payload, cancel the currently running test
+export const TEST_CANCEL_REQUEST = 'test.cancel.request';
 
 export const HTTP_CLIENT_SUPPLIED = 'httpClient.supplied';
 
@@ -17,3 +19,6 @@ export interface NavigationOpenPayload {
   id: string;
 }
 export const NAVIGATION_OPEN = 'navigation.open';
+
+// payload is a TreeNode (of a tcl file)
+export const TEST_SELECTED = 'test.selected';

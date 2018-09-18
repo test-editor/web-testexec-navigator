@@ -1,10 +1,10 @@
-import { async, ComponentFixture, TestBed, fakeAsync } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 
-import { TestExecNavigatorComponent } from './test-exec-navigator.component';
-import { TreeViewerModule } from '@testeditor/testeditor-commons';
+import { TestExecNavigatorComponent, EMPTY_TREE } from './test-exec-navigator.component';
+import { TreeViewerModule, TreeNode } from '@testeditor/testeditor-commons';
 import { MessagingModule, MessagingService } from '@testeditor/messaging-service';
 import { TestCaseService, CallTreeNode, DefaultTestCaseService } from '../test-case-service/default-test-case.service';
-import { mock, instance, capture, anyString, when } from 'ts-mockito';
+import { mock, instance, capture, anyString, when, resetCalls, verify } from 'ts-mockito';
 import { ExecutedCallTree, TestExecutionService, DefaultTestExecutionService } from '../test-execution-service/test-execution.service';
 import { TEST_NAVIGATION_SELECT } from '../event-types-out';
 import { By } from '@angular/platform-browser';
@@ -43,6 +43,8 @@ describe('TestExecNavigatorComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(TestExecNavigatorComponent);
     messagingService = TestBed.get(MessagingService);
+    resetCalls(testExecutionServiceMock);
+    resetCalls(testCaseServiceMock);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -195,6 +197,133 @@ describe('TestExecNavigatorComponent', () => {
     expect(component.treeNode.children[1].selected).toBeFalsy();
     expect(component.treeNode.children[0].selected).toBeTruthy();
     expect(actualPayload).toEqual('1234/5678/9/0');
+  });
+
+  it('ensures that test run button is deactivated on startup', () => {
+    // given + when
+
+    // then
+    const runButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0].nativeElement;
+    console.log(runButton);
+    expect(runButton.disabled).toBeTruthy();
+  });
+
+  it('activates execute button as soon as a test is available', fakeAsync(() => {
+    // given
+    component.treeNode = EMPTY_TREE;
+    const testNode: TreeNode = {
+      name: 'name',
+      root: null,
+      children: [],
+      id: 'some/test.tcl'
+    };
+    when(testCaseServiceMock.getCallTree(testNode.id)).thenReturn(Promise.resolve({ displayName: 'displayName', children: [] }));
+
+    // when
+    messagingService.publish('test.selected', testNode);
+    tick();
+    fixture.detectChanges();
+
+    // then
+    const runButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0].nativeElement;
+    expect(runButton.disabled).toBeFalsy();
+    expect(component.treeNode.name).toBe('displayName');
+  }));
+
+  it('sends an execution request when the execute button is pressed (and no test is running)', fakeAsync(() => {
+    // given
+    let testExecutionRequested = false;
+    messagingService.subscribe('test.execute.request', () => {
+      testExecutionRequested = true;
+    });
+    const testNode: TreeNode = {
+      name: 'name',
+      root: null,
+      children: [],
+      id: 'some/test.tcl'
+    };
+    when(testCaseServiceMock.getCallTree(testNode.id)).thenReturn(Promise.resolve({ displayName: 'displayName', children: [] }));
+    messagingService.publish('test.selected', testNode);
+    tick();
+    fixture.detectChanges();
+
+    // when
+    const runButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0].nativeElement;
+    runButton.click();
+    tick();
+
+    // then
+    expect(testExecutionRequested).toBeTruthy();
+  }));
+
+  it('executes a test if the request is received', fakeAsync(() => {
+    // given
+    let testExecutionStarted = false;
+    messagingService.subscribe('test.execution.started', () => {
+      testExecutionStarted = true;
+    });
+    when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve(null));
+
+    // when
+    messagingService.publish('test.execute.request', 'some/test.tcl');
+    tick();
+
+    // then
+    expect(testExecutionStarted).toBeTruthy();
+  }));
+
+  it('switches button to cancel if a test execution was started', fakeAsync(() => {
+    // given
+    when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve(null));
+
+    // when
+    messagingService.publish('test.execute.request', 'some/test.tcl');
+    tick();
+    fixture.detectChanges();
+
+    // then
+    const cancelButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0];
+    expect(cancelButton.properties.className).toContain(component.cancelIcon);
+  }));
+
+  it('switches button back to run if test execution failed to start', fakeAsync(() => {
+    // given
+    when(testExecutionServiceMock.execute('some/test.tcl')).thenThrow(new Error());
+
+    // when
+    messagingService.publish('test.execute.request', 'some/test.tcl');
+    tick();
+    fixture.detectChanges();
+
+    // then
+    const cancelButton = fixture.debugElement.queryAll(By.css('button[id=run]'))[0];
+    expect(cancelButton.properties.className).toContain(component.executeIcon);
+  }));
+
+  it('blocks test selected events if executing a test', fakeAsync(() => {
+    // given
+    component.treeNode = EMPTY_TREE;
+    when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve(null));
+    messagingService.publish('test.execute.request', 'some/test.tcl');
+    tick();
+
+    // when
+    const testNode: TreeNode = {
+      name: 'name',
+      root: null,
+      children: [],
+      id: 'some/test.tcl'
+    };
+    messagingService.publish('test.selected', testNode);
+    tick();
+
+    // then
+    expect(component.treeNode.name).toBe('<empty>');
+    verify(testCaseServiceMock.getCallTree(anyString())).never();
+  }));
+
+  it('switches button back to run if test execution finished', () => {
+    // TODO: test to come as soon as test are polled and the end of a test run is actually detected
   });
 
 });

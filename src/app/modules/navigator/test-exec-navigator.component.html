@@ -1,3 +1,11 @@
 <div>
+  <div class="icon-menu">
+    <div class="icons-left">
+      <button id="run" [class]="'icon fa ' + runCancelButtonClass" (click)="run()" [disabled]="!selectionIsExecutable()" [title]="getExecuteButtonTitle()"></button>
+    </div>
+    <div class="icons-right">
+      <button id="collapse-all" class="icon fa fa-minus-square-o" aria-hidden="true" (click)="collapseAll()" title="collapse all"></button>
+    </div>
+  </div>
   <app-tree-viewer [model]="treeNode" [level]="0" [config]="treeConfig"></app-tree-viewer>
 </div>

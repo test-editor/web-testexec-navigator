@@ -1,0 +1,34 @@
+.icon-menu {
+  padding: 5px;
+}
+
+.icons-left {
+  float: left;
+}
+
+.icons-right {
+  text-align: right;
+}
+
+.icon {
+  color: #CCCCCC;
+  cursor: pointer;
+}
+
+.icon:hover:enabled {
+  color: #ffffff;
+}
+
+.icon:hover:disabled {
+  cursor: auto;
+}
+
+.icon:disabled {
+  color: #555555;
+}
+
+button {
+  background:none!important;
+  border:none;
+  padding:0!important;
+}
