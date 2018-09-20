@@ -3,6 +3,15 @@
     <div class="icons-left" [id]="idPrefix+'icon-menu-left'">
       <button [id]="idPrefix+'icon-run'" [class]="'icon fa ' + runCancelButtonClass" (click)="run()" [disabled]="!selectionIsExecutable()" [title]="getExecuteButtonTitle()"></button>
     </div>
+
+    <button class="btn"><span>Test runs</span></button>
+    <ul class="dropdown">
+      <li (click)="testRunClicked()"><a href="#" >test run 1</a></li>
+      <li ><a href="#" (click)="testRunClicked()">test run 2</a></li>
+      <li (click)="testRunClicked()"><a href="#" >test run 3</a></li>
+      <li (click)="testRunClicked()"><a href="#" >test run 4</a></li>
+    </ul>
+
     <div class="icons-right" [id]="idPrefix+'icon-menu-right'">
       <button [id]="idPrefix+'icon-collapse-all'" class="icon fa fa-minus-square-o" aria-hidden="true" (click)="collapseAll()" title="collapse all"></button>
     </div>

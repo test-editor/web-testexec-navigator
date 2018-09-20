@@ -1,10 +1,118 @@
+/* Body */
+.btn {
+  outline: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  /* background: #5380F7; */
+  min-width: 150px;
+  max-width: 150px;
+  /* border: 0; */
+  /* border-radius: 4px; */
+  /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
+  /* box-sizing: border-box; */
+  /* padding: 16px 20px; */
+  color: #FFFFFF;
+  font-size: 14px;
+  letter-spacing: 1.1px;
+  overflow: hidden;
+  cursor: pointer;
+  float: left;
+}
+
+.dropdown li:before {
+  position: absolute;
+  font-family: 'FontAwesome';
+  content: '\f071';
+  margin:3px 0px 0 -25px;
+  color: #f00;
+}
+
+.btn span {
+  padding-left: 10px;
+}
+
+.btn:focus + .dropdown, .btn:active + .dropdown,
+.dropdown:active {
+  -webkit-transform: translate(20px, 30px);
+  transform: translate(20px, 30px);
+  opacity: 1;
+  visibility: visible;
+}
+.btn + .dropdown {
+  position: absolute;
+  /* top: 100%; */
+  /* left: 0; */
+  background: #202020;
+  width: 100%;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.3s ease;
+  max-height: 100px;
+  max-width: 350px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+/* .btn + .dropdown:before { */
+/*   content: ''; */
+/*   position: absolute; */
+/*   top: -3px; */
+/*   left: 10px; */
+/*   width: 0; */
+/*   height: 0; */
+/*   /\* box-shadow: 2px -2px 6px rgba(0, 0, 0, 0.05); *\/ */
+/*   /\* border-top: 6px solid #FFFFFF; *\/ */
+/*   /\* border-right: 6px solid #FFFFFF; *\/ */
+/*   /\* border-bottom: 6px solid transparent; *\/ */
+/*   border-left: 6px solid transparent; */
+/*   -webkit-transform: rotate(-45deg); */
+/*   transform: rotate(-45deg); */
+/*   mix-blend-mode: multiple; */
+/* } */
+.btn + .dropdown li {
+  z-index: 2;
+  position: b;
+  background: #202020;
+  padding: 0 0px;
+  color: #ffffff;
+  list-style-type: none;
+}
+.btn + .dropdown li.active {
+  color: #5380F7;
+}
+.btn + .dropdown li:first-child {
+  border-radius: 4px 4px 0 0;
+}
+.btn + .dropdown li:last-child {
+  border-radius: 0 0 4px 4px;
+}
+.btn + .dropdown li:last-child a {
+  border-bottom: 0;
+}
+.btn + .dropdown a {
+  display: block;
+  color: #ffffff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 4px 0;
+  color: inherit;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+
+
+/* ---- */
+
 .test-exec-navigator {
   flex-grow: 0;
   height: 100%;
   z-index: 1;
   background-color: #252525;
   resize: horizontal;
-  position: relative;
+  position: b;
 }
 
 .test-tree {
@@ -19,6 +127,7 @@
 
 .icons-left {
   float: left;
+  padding: 0 5px;
 }
 
 .icons-right {
@@ -49,24 +158,24 @@ button {
 }
 
 @keyframes pulse_animation {
-    0% { transform: scale(1); color: white; }
-    30% { transform: scale(1); color: white; }
-    35% { transform: scale(0.9); color: yellow; }
-    40% { transform: scale(1.1); color: yellow; }
-    45% { transform: scale(0.9); color: yellow; }
-    50% { transform: scale(1); color: white; }
-    60% { transform: scale(1); color: white; }
-    65% { transform: scale(0.9); color: yellow; }
-    70% { transform: scale(1.1); color: yellow; }
-    75% { transform: scale(0.9); color: yellow; }
-    80% { transform: scale(1); color: white; }
-    100% { transform: scale(1); color: white; }
+  0% { transform: scale(1); color: white; }
+  30% { transform: scale(1); color: white; }
+  35% { transform: scale(0.9); color: yellow; }
+  40% { transform: scale(1.1); color: yellow; }
+  45% { transform: scale(0.9); color: yellow; }
+  50% { transform: scale(1); color: white; }
+  60% { transform: scale(1); color: white; }
+  65% { transform: scale(0.9); color: yellow; }
+  70% { transform: scale(1.1); color: yellow; }
+  75% { transform: scale(0.9); color: yellow; }
+  80% { transform: scale(1); color: white; }
+  100% { transform: scale(1); color: white; }
 }
 
 .pulse {
-    animation-name: pulse_animation;
-    animation-duration: 5000ms;
-    transform-origin:70% 70%;
-    animation-iteration-count: infinite;
-    animation-timing-function: linear;
+  animation-name: pulse_animation;
+  animation-duration: 5000ms;
+  transform-origin:70% 70%;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
 }

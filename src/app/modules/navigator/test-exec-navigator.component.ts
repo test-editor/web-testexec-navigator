@@ -485,4 +485,8 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   collapseAll(): void {
   }
 
+  testRunClicked(): void {
+    this.log('clicked');
+  }
+
 }
