@@ -82,12 +82,12 @@ export class DefaultTestExecutionService extends TestExecutionService {
   }
 
   async getCallTree(resourceURL: string): Promise<ExecutedCallTree> {
-    const http  = await this.httpClientProvider.getHttpClient();
+    const http = await this.httpClientProvider.getHttpClient();
     return await http.get<ExecutedCallTree>(resourceURL).toPromise();
   }
 
   async execute(...paths: string[]): Promise<string> {
-    const http  = await this.httpClientProvider.getHttpClient();
+    const http = await this.httpClientProvider.getHttpClient();
     const response = await http.post(`${this.serviceUrl}/${DefaultTestExecutionService.executeURLPath}`,
       paths, {observe: 'response'}).toPromise();
     console.log(`Execution of test suite was started. Test suite resource URL is ${response.headers.get('location')}.`);
@@ -95,13 +95,13 @@ export class DefaultTestExecutionService extends TestExecutionService {
   }
 
   async getStatus(url: string): Promise<TestSuiteExecutionStatus> {
-    const http  = await this.httpClientProvider.getHttpClient();
+    const http = await this.httpClientProvider.getHttpClient();
     const stateText = await http.get(url + DefaultTestExecutionService.statusURLPath, { responseType: 'text' }).toPromise();
     return { resourceURL: url, status: this.toTestExecutionState(stateText) };
   }
 
   async getAllStatus(): Promise<TestSuiteExecutionStatus[]> {
-    const http  = await this.httpClientProvider.getHttpClient();
+    const http = await this.httpClientProvider.getHttpClient();
     const allStatus = await http.get<AllStatusResponse[]>(
       `${this.serviceUrl}/${DefaultTestExecutionService.statusAllURLPath}`).toPromise();
     return allStatus.map((entry) => ({

@@ -109,7 +109,7 @@
 .test-exec-navigator {
   flex-grow: 0;
   height: 100%;
-  z-index: 1;
+  /* z-index: 1; */
   background-color: #252525;
   resize: horizontal;
   position: b;
@@ -122,7 +122,7 @@
 }
 
 .icon-menu {
-  padding: 5px;
+  padding: 5px 0px 0px 0px;
 }
 
 .icons-left {
@@ -132,6 +132,7 @@
 
 .icons-right {
   text-align: right;
+  padding: 0px 5px 0px 5px;
 }
 
 .icon {

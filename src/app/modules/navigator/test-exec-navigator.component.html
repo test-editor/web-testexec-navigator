@@ -6,10 +6,7 @@
 
     <button class="btn"><span>Test runs</span></button>
     <ul class="dropdown">
-      <li (click)="testRunClicked()"><a href="#" >test run 1</a></li>
-      <li ><a href="#" (click)="testRunClicked()">test run 2</a></li>
-      <li (click)="testRunClicked()"><a href="#" >test run 3</a></li>
-      <li (click)="testRunClicked()"><a href="#" >test run 4</a></li>
+      <span *ngFor="let item of testRunList" (click)="loadTestRun(item)" [class]="item.class"><li><a href="#" >&nbsp;{{item.name}}</a></li></span>
     </ul>
 
     <div class="icons-right" [id]="idPrefix+'icon-menu-right'">
