@@ -160,14 +160,14 @@ button {
 @keyframes pulse_animation {
   0% { transform: scale(1); color: white; }
   30% { transform: scale(1); color: white; }
-  35% { transform: scale(0.9); color: yellow; }
-  40% { transform: scale(1.1); color: yellow; }
-  45% { transform: scale(0.9); color: yellow; }
+  35% { transform: scale(0.9); color: #ffbb00; }
+  40% { transform: scale(1.1); color: #ffbb00; }
+  45% { transform: scale(0.9); color: #ffbb00; }
   50% { transform: scale(1); color: white; }
   60% { transform: scale(1); color: white; }
-  65% { transform: scale(0.9); color: yellow; }
-  70% { transform: scale(1.1); color: yellow; }
-  75% { transform: scale(0.9); color: yellow; }
+  65% { transform: scale(0.9); color: #ffbb00; }
+  70% { transform: scale(1.1); color: #ffbb00; }
+  75% { transform: scale(0.9); color: #ffbb00; }
   80% { transform: scale(1); color: white; }
   100% { transform: scale(1); color: white; }
 }
