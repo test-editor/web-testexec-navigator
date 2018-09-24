@@ -1,6 +1,6 @@
 import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 
-import { TestExecNavigatorComponent, EMPTY_TREE } from './test-exec-navigator.component';
+import { TestExecNavigatorComponent, EMPTY_TREE, UITestRunStatus } from './test-exec-navigator.component';
 import { TreeViewerModule, TreeNode } from '@testeditor/testeditor-commons';
 import { MessagingModule, MessagingService } from '@testeditor/messaging-service';
 import { TestCaseService, CallTreeNode, DefaultTestCaseService } from '../test-case-service/default-test-case.service';
@@ -329,4 +329,91 @@ describe('TestExecNavigatorComponent', () => {
     // TODO: test to come as soon as test are polled and the end of a test run is actually detected
   });
 
+  it('constructs a (readable) entry for test executions', () => {
+    // given
+    const tclPath = 'src/test/java/some/Test.tcl';
+
+    // when
+    const testRun = component.buildUITestRunFromSingleTest(tclPath, 'someUrl', new Date('1971-01-28 15:30'));
+
+    // then
+    expect(testRun.name).toEqual('15:30 Test (some)');
+    expect(testRun.paths).toEqual([tclPath]);
+    expect(testRun.url).toEqual('someUrl');
+    expect(testRun.class).toEqual('running');
+    // jasmine.objectContaining does not work here, since testRun.class is of type UITestRunStatus
+    // (which essentially is of type string, but type conformance calculation seems to fail here)
+  });
+
+  it('shows no test run button if no test runs are available', () => {
+    // given + when +then
+    const testRunButtons = fixture.debugElement.queryAll(By.css('.testRunButton'));
+
+    expect(testRunButtons).toEqual([]);
+  });
+
+  it('shows the test run button if test runs are available', () => {
+    // given
+    const tclPath = 'src/test/java/some/Test.tcl';
+
+    // when
+    const testRun = component.buildUITestRunFromSingleTest(tclPath, 'someUrl', new Date('1971-01-28 15:30'));
+    component.addTestRun(testRun);
+    fixture.detectChanges();
+
+    // then
+    const testRunButton = fixture.debugElement.queryAll(By.css('.testRunButton'))[0].nativeElement;
+    expect(testRunButton.disabled).toBeFalsy();
+  });
+
+  it('loads a test if selecting it from the test run dropdown', () => {
+    // given
+    const tclPath = 'src/test/java/some/Test.tcl';
+    spyOn(component, 'loadExecutedTreeFor');
+    when(testExecutionServiceMock.getCallTree('someUrl')).thenResolve({
+      testSuiteId: '0',
+      testSuiteRunId: '0',
+      resourcePaths: [ tclPath ],
+      testRuns: []
+    });
+
+    // when
+    const testRun = component.buildUITestRunFromSingleTest(tclPath, 'someUrl', new Date('1971-01-28 15:30'));
+    component.addTestRun(testRun);
+    fixture.detectChanges();
+    const testRunDropdownElement = fixture.debugElement.queryAll(By.css('.testRunDropdown li:first-child'));
+    testRunDropdownElement[0].nativeElement.click();
+    fixture.detectChanges();
+
+    // then
+    expect(component.loadExecutedTreeFor).toHaveBeenCalledWith(tclPath, 'someUrl');
+  });
+
+  // this test runs for chrome only
+  xit('shows the dropdown if the test run button was clicked', () => {
+    // given
+    const tclPath = 'src/test/java/some/Test.tcl';
+    when(testExecutionServiceMock.getCallTree('someUrl')).thenResolve({
+      testSuiteId: '0',
+      testSuiteRunId: '0',
+      resourcePaths: [ tclPath ],
+      testRuns: []
+    });
+
+    // when
+    const testRun = component.buildUITestRunFromSingleTest(tclPath, 'someUrl', new Date('1971-01-28 15:30'));
+    component.addTestRun(testRun);
+    fixture.detectChanges();
+    const testRunButton = fixture.debugElement.queryAll(By.css('.testRunButton'))[0].nativeElement;
+    testRunButton.focus();
+    testRunButton.click();
+    fixture.detectChanges();
+    const testRunDropdown = fixture.debugElement.queryAll(By.css('.testRunDropdown'))[0];
+    // disable animation
+    testRunDropdown.nativeElement.classList.add('no-animate');
+    fixture.detectChanges();
+
+    // then
+    expect(window.getComputedStyle(testRunDropdown.nativeElement).opacity).toEqual('1');
+  });
 });

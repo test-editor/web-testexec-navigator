@@ -16,6 +16,14 @@ import { idPrefix } from '../module-constants';
 
 export const EMPTY_TREE: TreeNode = { name: '<empty>', root: null, children: [] };
 
+export type UITestRunStatus = 'running'| 'successful' | 'failure';
+export interface UITestRun {
+  class: UITestRunStatus;   // css class to use for display
+  name: string;           // display name
+  paths: string[];        // list of actually executed tests in this test suite
+  url: string;            // resource url which can be used for queries against the backend
+}
+
 @Component({
   selector: 'app-testexec-navigator',
   templateUrl: './test-exec-navigator.component.html',
@@ -31,16 +39,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   private testExecutionFailedSubscription: Subscription;
   private testCancelSubscription: Subscription;
   private testPathSelected: string = null;
-  private testRunList = [
-    { class: 'successful', name: 'test suite 0, run 0', url: 'http://locahost:9080/test-suite/0/0',
-      paths: [ 'src/test/java/org/testeditor/' ] },
-    { class: 'running', name: 'test suite 0, run 0', url: 'http://locahost:9080/test-suite/0/0',
-      paths: [ 'src/test/java/org/testeditor/' ] },
-    { class: 'failure', name: 'test suite 0, run 0', url: 'http://locahost:9080/test-suite/0/0',
-      paths: [ 'src/test/java/org/testeditor/' ] },
-    { class: 'successful', name: 'test suite 0, run 0', url: 'http://locahost:9080/test-suite/0/0',
-      paths: [ 'src/test/java/org/testeditor/' ] }
-  ];
+  private testRunList: UITestRun[] = [ ];
   @Output() treeNode: TreeNode = EMPTY_TREE;
   @Output() treeConfig: TreeViewerConfig = {
     onDoubleClick: (node) => { node.expanded = !node.expanded; },
@@ -82,8 +81,10 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   setupTestSelectedListener() {
     this.testSelectedSubscription = this.messagingService.subscribe(TEST_SELECTED, (node: TreeNode) => {
       this.log('received ' + TEST_SELECTED, node);
-      this.updateTreeFor(node.id);
-      this.testPathSelected = node.id;
+      if (!this.testIsRunning()) {
+        this.updateTreeFor(node.id);
+        this.testPathSelected = node.id;
+      }
     });
   }
 
@@ -130,6 +131,20 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   handleCancelRequest(): void {
     // TODO: to be implemented
+    this.log('ERROR: cancel running test not implemented yet');
+  }
+
+  buildUITestRunFromSingleTest(tclPath: string, executingTestResourceUrl: string, date: Date): UITestRun {
+    const shortenedTestPath = tclPath.substring(14, tclPath.length - 4); // cut off leading 'src/test/java/' and trailing '.tcl'
+    const paths = shortenedTestPath.split('/');
+    const testNameOnly = paths.pop();
+    const name = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+      + ' ' + testNameOnly + ' (' + paths.join('.') + ')';
+    return  { name: name, url: executingTestResourceUrl, paths: [ tclPath ], class: 'running' };
+  }
+
+  addTestRun(testRun: UITestRun) {
+    this.testRunList.unshift(testRun);
   }
 
   async handleExecutionRequest(tclPath: string) {
@@ -143,13 +158,11 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       };
       this.messagingService.publish(TEST_EXECUTION_STARTED, payload);
       this.log('sending TEST_EXECUTION_STARTED', payload);
-      const relName = tclPath.substring(14);
-      const testName = relName.substring(0, relName.length - 4);
-      const name = new Date().toLocaleTimeString() + ' ' + testName;
-      const testRunItem = { name: name, url: executingTestResourceUrl, paths: [ tclPath ], class: 'running' };
-      this.testRunList.push(testRunItem);
-      const finalExecutionStatus = await this.testExecutionObserver(executingTestResourceUrl, tclPath);
-      testRunItem.class = finalExecutionStatus.status === TestExecutionState.LastRunSuccessful ? 'successful' : 'failure';
+      const testRunItem = this.buildUITestRunFromSingleTest(tclPath, executingTestResourceUrl, new Date());
+      this.addTestRun(testRunItem);
+      const finalExecutionStatus = await this.testExecutionWatcher(executingTestResourceUrl, tclPath);
+      testRunItem.class = finalExecutionStatus.status === TestExecutionState.LastRunSuccessful ?
+        'successful' : 'failure';
       this.switchToIdleStatus();
     } catch (reason) {
       this.switchToIdleStatus();
@@ -163,7 +176,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     }
   }
 
-  async testExecutionObserver(testId: string, tclPath: string): Promise<TestSuiteExecutionStatus> {
+  async testExecutionWatcher(testId: string, tclPath: string): Promise<TestSuiteExecutionStatus> {
     let suiteStatus: TestSuiteExecutionStatus;
     let executionStatus = TestExecutionState.Running;
     while (executionStatus === TestExecutionState.Running) {
@@ -469,7 +482,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   testIsRunning(): boolean {
-    return this.runCancelButtonClass !== this.executeIcon; // TODO: <-- change that
+    return this.runCancelButtonClass !== this.executeIcon;
   }
 
   run(): void {
@@ -497,7 +510,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   collapseAll(): void {
   }
 
-  loadTestRun(testRunItem) {
+  loadTestRun(testRunItem: UITestRun) {
     this.log('loading ' + testRunItem.name);
     this.loadExecutedTreeFor(testRunItem.paths[0], testRunItem.url);
   }
