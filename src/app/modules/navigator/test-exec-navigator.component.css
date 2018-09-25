@@ -76,7 +76,6 @@
 
 .testRunButton + .testRunDropdown li {
   z-index: 2;
-  position: b;
   background: #202020;
   padding: 0 0px;
   color: #ffffff;
@@ -110,7 +109,6 @@
   height: 100%;
   background-color: #252525;
   resize: horizontal;
-  position: b;
 }
 
 .test-tree {

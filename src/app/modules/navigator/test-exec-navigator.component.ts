@@ -18,10 +18,10 @@ export const EMPTY_TREE: TreeNode = { name: '<empty>', root: null, children: [] 
 
 export type UITestRunStatus = 'running'| 'successful' | 'failure';
 export interface UITestRun {
-  class: UITestRunStatus;   // css class to use for display
-  name: string;           // display name
-  paths: string[];        // list of actually executed tests in this test suite
-  url: string;            // resource url which can be used for queries against the backend
+  cssClass: UITestRunStatus;
+  displayName: string;
+  executingTclPaths: string[];
+  testSuitRunResourceUrl: string;
 }
 
 @Component({
@@ -135,12 +135,13 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   buildUITestRunFromSingleTest(tclPath: string, executingTestResourceUrl: string, date: Date): UITestRun {
-    const shortenedTestPath = tclPath.substring(14, tclPath.length - 4); // cut off leading 'src/test/java/' and trailing '.tcl'
+    const shortenedTestPath = (tclPath.startsWith('src/test/java/') && (tclPath.endsWith('.tcl'))) ?
+      tclPath.substring(14, tclPath.length - 4) : tclPath;
     const paths = shortenedTestPath.split('/');
     const testNameOnly = paths.pop();
     const name = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
       + ' ' + testNameOnly + ' (' + paths.join('.') + ')';
-    return  { name: name, url: executingTestResourceUrl, paths: [ tclPath ], class: 'running' };
+    return  { displayName: name, testSuitRunResourceUrl: executingTestResourceUrl, executingTclPaths: [ tclPath ], cssClass: 'running' };
   }
 
   addTestRun(testRun: UITestRun) {
@@ -161,7 +162,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       const testRunItem = this.buildUITestRunFromSingleTest(tclPath, executingTestResourceUrl, new Date());
       this.addTestRun(testRunItem);
       const finalExecutionStatus = await this.testExecutionWatcher(executingTestResourceUrl, tclPath);
-      testRunItem.class = finalExecutionStatus.status === TestExecutionState.LastRunSuccessful ?
+      testRunItem.cssClass = finalExecutionStatus.status === TestExecutionState.LastRunSuccessful ?
         'successful' : 'failure';
       this.switchToIdleStatus();
     } catch (reason) {
@@ -511,8 +512,8 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   loadTestRun(testRunItem: UITestRun) {
-    this.log('loading ' + testRunItem.name);
-    this.loadExecutedTreeFor(testRunItem.paths[0], testRunItem.url);
+    this.log('loading ' + testRunItem.displayName);
+    this.loadExecutedTreeFor(testRunItem.executingTclPaths[0], testRunItem.testSuitRunResourceUrl);
   }
 
 }

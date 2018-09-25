@@ -337,10 +337,10 @@ describe('TestExecNavigatorComponent', () => {
     const testRun = component.buildUITestRunFromSingleTest(tclPath, 'someUrl', new Date('1971-01-28 15:30'));
 
     // then
-    expect(testRun.name).toEqual('15:30 Test (some)');
-    expect(testRun.paths).toEqual([tclPath]);
-    expect(testRun.url).toEqual('someUrl');
-    expect(testRun.class).toEqual('running');
+    expect(testRun.displayName).toEqual('15:30 Test (some)');
+    expect(testRun.executingTclPaths).toEqual([tclPath]);
+    expect(testRun.testSuitRunResourceUrl).toEqual('someUrl');
+    expect(testRun.cssClass).toEqual('running');
     // jasmine.objectContaining does not work here, since testRun.class is of type UITestRunStatus
     // (which essentially is of type string, but type conformance calculation seems to fail here)
   });
