@@ -16,6 +16,14 @@ import { idPrefix } from '../module-constants';
 
 export const EMPTY_TREE: TreeNode = { name: '<empty>', root: null, children: [] };
 
+export type UITestRunStatus = 'running'| 'successful' | 'failure';
+export interface UITestRun {
+  cssClass: UITestRunStatus;
+  displayName: string;
+  executingTclPaths: string[];
+  testSuitRunResourceUrl: string;
+}
+
 @Component({
   selector: 'app-testexec-navigator',
   templateUrl: './test-exec-navigator.component.html',
@@ -31,7 +39,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   private testExecutionFailedSubscription: Subscription;
   private testCancelSubscription: Subscription;
   private testPathSelected: string = null;
-
+  private testRunList: UITestRun[] = [ ];
   @Output() treeNode: TreeNode = EMPTY_TREE;
   @Output() treeConfig: TreeViewerConfig = {
     onDoubleClick: (node) => { node.expanded = !node.expanded; },
@@ -73,8 +81,10 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   setupTestSelectedListener() {
     this.testSelectedSubscription = this.messagingService.subscribe(TEST_SELECTED, (node: TreeNode) => {
       this.log('received ' + TEST_SELECTED, node);
-      this.updateTreeFor(node.id);
-      this.testPathSelected = node.id;
+      if (!this.testIsRunning()) {
+        this.updateTreeFor(node.id);
+        this.testPathSelected = node.id;
+      }
     });
   }
 
@@ -121,20 +131,39 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   handleCancelRequest(): void {
     // TODO: to be implemented
+    this.log('ERROR: cancel running test not implemented yet');
+  }
+
+  buildUITestRunFromSingleTest(tclPath: string, executingTestResourceUrl: string, date: Date): UITestRun {
+    const shortenedTestPath = (tclPath.startsWith('src/test/java/') && (tclPath.endsWith('.tcl'))) ?
+      tclPath.substring(14, tclPath.length - 4) : tclPath;
+    const paths = shortenedTestPath.split('/');
+    const testNameOnly = paths.pop();
+    const name = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+      + ' ' + testNameOnly + ' (' + paths.join('.') + ')';
+    return  { displayName: name, testSuitRunResourceUrl: executingTestResourceUrl, executingTclPaths: [ tclPath ], cssClass: 'running' };
+  }
+
+  addTestRun(testRun: UITestRun) {
+    this.testRunList.unshift(testRun);
   }
 
   async handleExecutionRequest(tclPath: string) {
     try {
       this.switchToTestCurrentlyRunningStatus();
-      const response = await this.testExecutionService.execute(tclPath);
+      const executingTestResourceUrl = await this.testExecutionService.execute(tclPath);
       const payload = {
         path: tclPath,
-        response: response,
+        response: executingTestResourceUrl,
         message: 'Execution of "\${}" has been started.'
       };
       this.messagingService.publish(TEST_EXECUTION_STARTED, payload);
       this.log('sending TEST_EXECUTION_STARTED', payload);
-      await this.testExecutionObserver(response, tclPath);
+      const testRunItem = this.buildUITestRunFromSingleTest(tclPath, executingTestResourceUrl, new Date());
+      this.addTestRun(testRunItem);
+      const finalExecutionStatus = await this.testExecutionWatcher(executingTestResourceUrl, tclPath);
+      testRunItem.cssClass = finalExecutionStatus.status === TestExecutionState.LastRunSuccessful ?
+        'successful' : 'failure';
       this.switchToIdleStatus();
     } catch (reason) {
       this.switchToIdleStatus();
@@ -148,7 +177,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     }
   }
 
-  async testExecutionObserver(testId: string, tclPath: string) {
+  async testExecutionWatcher(testId: string, tclPath: string): Promise<TestSuiteExecutionStatus> {
     let suiteStatus: TestSuiteExecutionStatus;
     let executionStatus = TestExecutionState.Running;
     while (executionStatus === TestExecutionState.Running) {
@@ -175,6 +204,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
         this.log('ERROR: test execution ended neither successful nor did it fail', suiteStatus);
       }
     }
+    return suiteStatus;
   }
 
   /** visible for testing */
@@ -208,11 +238,11 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       const callTreeNode = await this.testCaseService.getCallTree(path);
       this.log('got testexec call tree answer from backend', callTreeNode);
       this.runningNumber = 0;
-      this.treeNode = this.transformTreeNode(callTreeNode);
+      const transformedCallTreeNode = this.transformTreeNode(callTreeNode);
       const executedTree = await this.testExecutionService.getCallTree(resourceURL);
       this.log('got executed tree node', executedTree);
       executedTree.testRuns[0].children.forEach(child => this.updateExecutionStatus(child));
-      this.treeNode = this.transformExecutionTree(executedTree);
+      this.treeNode = this.transformExecutionTree(executedTree, transformedCallTreeNode);
       this.treeNode.expanded = true;
       this.treeNode.children.forEach(child => this.updateExpansionStatus(child));
     } catch (error) {
@@ -295,7 +325,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   // TODO: handle all test runs as opposed to just the first one (i.e. iterate executedCallTree.testRuns as opposed to using element [0])
-  private transformExecutionTree(executedCallTree: ExecutedCallTree, root?: TreeNode): TreeNode {
+  private transformExecutionTree(executedCallTree: ExecutedCallTree, callTree: TreeNode): TreeNode {
     const rootID = new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId, executedCallTree.testRuns[0].testRunId);
     const result: TreeNode = {
       name: 'Testrun: ' + executedCallTree.started,
@@ -308,13 +338,9 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       id: rootID.toPathString(),
       hover: `Test Suite [Run]: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}]`
     };
-    if (root === undefined) {
-      result.root = result;
-    } else {
-      result.root = root;
-    }
+    result.root = result;
     result.children = (executedCallTree.testRuns[0].children || [])
-      .map(node => this.transformExecutionNode(node, this.treeNode, rootID, result.root));
+      .map(node => this.transformExecutionNode(node, callTree, rootID, result.root));
     return result;
   }
 
@@ -481,7 +507,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   testIsRunning(): boolean {
-    return this.runCancelButtonClass !== this.executeIcon; // TODO: <-- change that
+    return this.runCancelButtonClass !== this.executeIcon;
   }
 
   run(): void {
@@ -507,6 +533,11 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   collapseAll(): void {
+  }
+
+  loadTestRun(testRunItem: UITestRun) {
+    this.log('loading ' + testRunItem.displayName);
+    this.loadExecutedTreeFor(testRunItem.executingTclPaths[0], testRunItem.testSuitRunResourceUrl);
   }
 
 }

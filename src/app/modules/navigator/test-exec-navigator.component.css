@@ -1,10 +1,114 @@
+.testRunButton {
+  outline: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 150px;
+  max-width: 150px;
+  color: #FFFFFF;
+  font-size: 14px;
+  letter-spacing: 1.1px;
+  overflow: hidden;
+  cursor: pointer;
+  float: left;
+}
+
+.testRunDropdown .successful li:before {
+  position: absolute;
+  margin:3px 0px 0 -25px;
+  font-family: FontAwesome;
+  content: "\f058"; /* check */
+  color: #00cc00;
+}
+
+.testRunDropdown .failure li:before {
+  position: absolute;
+  margin:3px 0px 0 -25px;
+  font-family: FontAwesome;
+  content: "\f071"; /* warning */
+  color: #dd0000;
+}
+
+.testRunDropdown .running li:before {
+  position: absolute;
+  margin:3px 0px 0 -25px;
+  font-family: FontAwesome;
+  content: "\f059"; /* question mark */
+  color: #808080;
+}
+
+.testRunDropdown .failed li:before {
+  position: absolute;
+  font-family: 'FontAwesome';
+  content: '\f071';
+  margin:3px 0px 0 -25px;
+  color: #f00;
+}
+
+.testRunButton span {
+  padding-left: 10px;
+}
+
+.testRunButton:focus + .testRunDropdown,
+.testRunButton:active + .testRunDropdown,
+.testRunDropdown:active {
+  -webkit-transform: translate(20px, 30px);
+  transform: translate(20px, 30px);
+  opacity: 1;
+  visibility: visible;
+}
+
+.testRunButton + .testRunDropdown {
+  position: absolute;
+  background: #202020;
+  width: 100%;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.3s ease;
+  max-height: 100px;
+  max-width: 350px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.testRunButton + .testRunDropdown li {
+  z-index: 2;
+  background: #202020;
+  padding: 0 0px;
+  color: #ffffff;
+  list-style-type: none;
+}
+
+.testRunButton + .testRunDropdown li:first-child {
+  border-radius: 4px 4px 0 0;
+}
+
+.testRunButton + .testRunDropdown li:last-child {
+  border-radius: 0 0 4px 4px;
+}
+
+.testRunButton + .testRunDropdown li:last-child a {
+  border-bottom: 0;
+}
+
+.testRunButton + .testRunDropdown a {
+  display: block;
+  color: #ffffff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 4px 0;
+  color: inherit;
+  font-size: 14px;
+  text-decoration: none;
+}
+
 .test-exec-navigator {
   flex-grow: 0;
   height: 100%;
-  z-index: 1;
   background-color: #252525;
   resize: horizontal;
-  position: relative;
 }
 
 .test-tree {
@@ -14,15 +118,17 @@
 }
 
 .icon-menu {
-  padding: 5px;
+  padding: 5px 0px 0px 0px;
 }
 
 .icons-left {
   float: left;
+  padding: 0 5px;
 }
 
 .icons-right {
   text-align: right;
+  padding: 0px 5px 0px 5px;
 }
 
 .icon {
@@ -49,24 +155,30 @@ button {
 }
 
 @keyframes pulse_animation {
-    0% { transform: scale(1); color: white; }
-    30% { transform: scale(1); color: white; }
-    35% { transform: scale(0.9); color: yellow; }
-    40% { transform: scale(1.1); color: yellow; }
-    45% { transform: scale(0.9); color: yellow; }
-    50% { transform: scale(1); color: white; }
-    60% { transform: scale(1); color: white; }
-    65% { transform: scale(0.9); color: yellow; }
-    70% { transform: scale(1.1); color: yellow; }
-    75% { transform: scale(0.9); color: yellow; }
-    80% { transform: scale(1); color: white; }
-    100% { transform: scale(1); color: white; }
+  0% { transform: scale(1); color: white; }
+  30% { transform: scale(1); color: white; }
+  35% { transform: scale(0.9); color: #ffbb00; }
+  40% { transform: scale(1.1); color: #ffbb00; }
+  45% { transform: scale(0.9); color: #ffbb00; }
+  50% { transform: scale(1); color: white; }
+  60% { transform: scale(1); color: white; }
+  65% { transform: scale(0.9); color: #ffbb00; }
+  70% { transform: scale(1.1); color: #ffbb00; }
+  75% { transform: scale(0.9); color: #ffbb00; }
+  80% { transform: scale(1); color: white; }
+  100% { transform: scale(1); color: white; }
 }
 
 .pulse {
-    animation-name: pulse_animation;
-    animation-duration: 5000ms;
-    transform-origin:70% 70%;
-    animation-iteration-count: infinite;
-    animation-timing-function: linear;
+  animation-name: pulse_animation;
+  animation-duration: 5000ms;
+  transform-origin:70% 70%;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+/* used for testing */
+.no-animate {
+   -webkit-transition: none !important;
+   transition: none !important;
 }

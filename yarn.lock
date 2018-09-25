@@ -33,7 +33,7 @@
   dependencies:
     tslib "^1.7.1"
 
-"@angular/cli@~1.7.4":
+"@angular/cli@^1.7.4":
   version "1.7.4"
   resolved "https://registry.yarnpkg.com/@angular/cli/-/cli-1.7.4.tgz#b6c31b5fc6f8ea07e55b1b01a26422f5358a4ea6"
   dependencies:
@@ -195,12 +195,12 @@
     semver-intersect "^1.1.2"
 
 "@testeditor/messaging-service@~1.4.0":
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/@testeditor/messaging-service/-/messaging-service-1.4.0.tgz#a6ea5de45b1b59c8f0ecdb5af99b2899fb17d3e7"
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/@testeditor/messaging-service/-/messaging-service-1.4.1.tgz#de0f8cdd18bc6b19ad01a82ba6d0f0f75ff85266"
 
 "@testeditor/testeditor-commons@~0.2.0":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@testeditor/testeditor-commons/-/testeditor-commons-0.2.1.tgz#825253334e59fa2b0efb7f2c20f16715036db863"
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/@testeditor/testeditor-commons/-/testeditor-commons-0.2.6.tgz#b4a290586b42ac5bc8190695c2ce73b408cb444e"
   dependencies:
     tslib "^1.7.1"
 

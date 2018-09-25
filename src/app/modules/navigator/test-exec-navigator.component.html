@@ -3,6 +3,10 @@
     <div class="icons-left" [id]="idPrefix+'icon-menu-left'">
       <button [id]="idPrefix+'icon-run'" [class]="'icon fa ' + runCancelButtonClass" (click)="run()" [disabled]="!selectionIsExecutable()" [title]="getExecuteButtonTitle()"></button>
     </div>
+    <button class="testRunButton" *ngIf="testRunList.length>0"><span>Test runs</span></button>
+    <ul class="testRunDropdown" *ngIf="testRunList.length>0">
+      <span *ngFor="let item of testRunList" (click)="loadTestRun(item)" [class]="item.class"><li><a href="#" >{{item.name}}</a></li></span>
+    </ul>
     <div class="icons-right" [id]="idPrefix+'icon-menu-right'">
       <button [id]="idPrefix+'icon-collapse-all'" class="icon fa fa-minus-square-o" aria-hidden="true" (click)="collapseAll()" title="collapse all"></button>
     </div>
