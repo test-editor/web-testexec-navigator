@@ -283,7 +283,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       expandedCssClasses: expandedCssClass,
       leafCssClasses: leafCssClass,
       id: 'ID' + nodeNumber,
-      hover: 'ID' + nodeNumber + ':'
+      hover: 'not executed yet'
     };
     if (root === undefined) {
       result.root = result;
@@ -306,7 +306,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       expandedCssClasses: 'fa-chevron-down',
       leafCssClasses: 'fa-folder',
       id: rootID.toPathString(),
-      hover: `Test Suite [Run] ID: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}]`
+      hover: `Test Suite [Run]: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}]`
     };
     if (root === undefined) {
       result.root = result;
@@ -363,17 +363,41 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     return childrenUpdate;
   }
 
-  private hoverFor(executedCallTreeNode: ExecutedCallTreeNode): string {
-    let result = executedCallTreeNode.id;
+  // TOOD: eventually move this into the commons (is a code duplication from web-testexec-details)!
+  private formatNanoseconds(nanoseconds: number): string {
+    const microseconds = Math.floor(nanoseconds / 1e3) % 1000;
+    const milliseconds = Math.floor(nanoseconds / 1e6) % 1000;
+    const seconds = Math.floor(nanoseconds / 1e9) % 60;
+    const minutes = Math.floor(nanoseconds / 6e10) % 60;
+    const hours = Math.floor(nanoseconds / 3.6e12) % 60;
 
-    if (executedCallTreeNode.node) {
-      result = result + ', Type: ' + executedCallTreeNode.node;
+    let humanReadableTime: string;
+    if (nanoseconds < 1000) {
+      humanReadableTime = nanoseconds.toString() + ' ns';
+    } else if (nanoseconds < 1e6) {
+      humanReadableTime = microseconds.toString() + ' µs';
+    } else if (nanoseconds < 1e9) {
+      humanReadableTime = milliseconds.toString() + ' ms';
+    } else {
+      humanReadableTime = `${seconds}.${milliseconds} s`;
+      if (nanoseconds >= 6e10) {
+        humanReadableTime = minutes + ' min ' + humanReadableTime;
+        if (nanoseconds >= 3.6e12) {
+          humanReadableTime = hours + ' h ' + humanReadableTime;
+        }
+      }
     }
 
-    result = result + ':';
+    return humanReadableTime;
+  }
+
+
+  private hoverFor(executedCallTreeNode: ExecutedCallTreeNode): string {
+
+    let result = executedCallTreeNode.leave ? 'ok:' : 'failed:';
 
     if (executedCallTreeNode.enter && executedCallTreeNode.leave) {
-      result = result + ' executed ' + (Number(executedCallTreeNode.leave) - Number(executedCallTreeNode.enter)) / 1000 + 'ms';
+      result = result + ' ran ' + this.formatNanoseconds(Number(executedCallTreeNode.leave) - Number(executedCallTreeNode.enter));
     }
 
     const variables: String[] = new Array<String>();
