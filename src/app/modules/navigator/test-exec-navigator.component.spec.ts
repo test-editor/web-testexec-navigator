@@ -366,6 +366,22 @@ describe('TestExecNavigatorComponent', () => {
     expect(testRunButton.disabled).toBeFalsy();
   });
 
+  it('make sure the added test is added to the ui dropdown', () => {
+    // given
+    const tclPath = 'src/test/java/some/Test.tcl';
+
+    // when
+    const testRun = component.buildUITestRunFromSingleTest(tclPath, 'someUrl', new Date('1971-01-28 15:30'));
+    component.addTestRun(testRun);
+    fixture.detectChanges();
+
+    // then
+    const testRunDropdownElement = fixture.debugElement.queryAll(By.css('.testRunDropdown li:first-child'))[0].nativeElement;
+    const spanWithRightCSSClass = fixture.debugElement.queryAll(By.css('.testRunDropdown .running'))[0];
+    expect(testRunDropdownElement.innerHTML).toContain('15:30 Test (some)');
+    expect(spanWithRightCSSClass).toBeDefined();
+  });
+
   it('loads a test if selecting it from the test run dropdown', () => {
     // given
     const tclPath = 'src/test/java/some/Test.tcl';
@@ -408,12 +424,12 @@ describe('TestExecNavigatorComponent', () => {
     testRunButton.focus();
     testRunButton.click();
     fixture.detectChanges();
-    const testRunDropdown = fixture.debugElement.queryAll(By.css('.testRunDropdown'))[0];
+    const testRunDropdown = fixture.debugElement.queryAll(By.css('.testRunDropdown'))[0].nativeElement;
     // disable animation
-    testRunDropdown.nativeElement.classList.add('no-animate');
+    testRunDropdown.classList.add('no-animate');
     fixture.detectChanges();
 
     // then
-    expect(window.getComputedStyle(testRunDropdown.nativeElement).opacity).toEqual('1');
+    expect(window.getComputedStyle(testRunDropdown).opacity).toEqual('1');
   });
 });
