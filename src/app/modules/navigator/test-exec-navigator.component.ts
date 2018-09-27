@@ -419,8 +419,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
 
   private hoverFor(executedCallTreeNode: ExecutedCallTreeNode): string {
-
-    let result = executedCallTreeNode.leave ? 'ok:' : 'failed:';
+    let result = executedCallTreeNode.status ? executedCallTreeNode.status + ':' : 'unknown:';
 
     if (executedCallTreeNode.enter && executedCallTreeNode.leave) {
       result = result + ' ran ' + this.formatNanoseconds(Number(executedCallTreeNode.leave) - Number(executedCallTreeNode.enter));
@@ -432,10 +431,6 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
         variables.push(key + ' = "' + executedCallTreeNode.preVariables[key] + '"');
       });
       result = result + ' with ' + variables.join(', ');
-    }
-
-    if (executedCallTreeNode.fixtureException) {
-      result = result + '\n' + JSON.stringify(executedCallTreeNode.fixtureException);
     }
 
     return result;
