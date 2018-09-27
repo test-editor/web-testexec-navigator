@@ -132,7 +132,7 @@ describe('TestExecNavigatorComponent', () => {
        expect(testCaseRoot.children[0].hover).toMatch('.*var = "val".*');
        expect(testCaseRoot.children[1].name).toMatch('real other');
        expect(testCaseRoot.children[1].expandedCssClasses).toMatch('.*tree-item-in-error.*');
-       expect(testCaseRoot.children[1].hover).toMatch('[\\s\\S]*\\{"some key":\\[42,48\\],"otherKey":"Hello"\\}');
+       expect(testCaseRoot.children[1].hover).toMatch('ERROR:.*');
        expect(testCaseRoot.children[2].name).toMatch('still another');
        expect(testCaseRoot.children[2].expandedCssClasses).not.toMatch('.*tree-item.*', 'node not executed should not be marked');
        expect(testCaseRoot.expandedCssClasses).toMatch('.*tree-item-in-error.*');
