@@ -3,7 +3,7 @@ with import <nixpkgs> {};
 stdenv.mkDerivation {
     name = "testeditor-angular-development";
     buildInputs = [
-        nodejs-9_x
+        nodejs-10_x
         nodePackages.npm
         nodePackages.yarn
         nodePackages.jsonlint
