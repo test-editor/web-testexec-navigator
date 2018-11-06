@@ -55,6 +55,41 @@ describe('TestExecNavigatorComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  [['IDS-0', 'IDC-0', -1],
+   ['IDS-0', 'ID-0', -1],
+   ['IDS-0', 'IDS-1', -1],
+   ['IDS-0-0-0', 'IDS-0-1-0', -1],
+   ['IDS-0-0-0', 'IDS-0-0-1', -1],
+   ['IDS-0', 'IDS-0', 0],
+   ['IDS-2-23-3', 'IDS-2-23-3', 0],
+
+   ['IDC-0', 'IDS-0', 1],
+   ['IDC-0', 'ID-0', 1],
+   ['IDC-0', 'IDS-1', 1],
+   ['IDC-0-0-0', 'IDC-0-1-0', -1],
+   ['IDC-0-0-0', 'IDC-0-0-1', -1],
+   ['IDC-0', 'IDC-0', 0],
+   ['IDC-2-23-3', 'IDC-2-23-3', 0],
+
+   ['ID-0', 'IDC-0', -1],
+   ['ID-0', 'ID-1', -1],
+   ['ID-1', 'ID-0', 1],
+   ['ID-1', 'ID-1', 0],
+   ['ID-0-1', 'ID-0-1-0', -1],
+   ['ID-0-1', 'ID-0-0-1', 1],
+   ['ID-1', 'ID-0', 1],
+   ['ID-1', 'ID-1', 0],
+   ['ID-1-2-3', 'ID-1-2-2', 1],
+   ['ID-1-2-3', 'ID-1-2-4', -1]
+  ].forEach((idPair) => {
+
+    fit('compares tree ids correctly: ' + idPair, () => {
+      const compared = component.compareTreeIds(idPair[0] as string, idPair[1] as string);
+
+      expect(Math.sign(compared as number)).toEqual(idPair[2] as number, idPair[0] as string + ' compared to ' + idPair[1] as string);
+    });
+  });
+
   it('should provide transformed call tree merged with static call tree from backend (in case of errors during test execution)',
      fakeAsync(async () => {
        // given
@@ -105,12 +140,16 @@ describe('TestExecNavigatorComponent', () => {
 
        const expectedTree: CallTreeNode = {
          displayName: 'some',
+         treeId: 'ID',
          children: [
            { displayName: 'first',
+             treeId: 'IDROOT',
              children: [] },
            { displayName: 'other',
+             treeId: 'ID0',
              children: [] },
            { displayName: 'still another',
+             treeId: 'ID1',
              children: [] }
          ]
        };
@@ -143,9 +182,11 @@ describe('TestExecNavigatorComponent', () => {
     const node: CallTreeNode = {
       children: [{
         displayName: 'child',
+        treeId: 'ID',
         children: []
       }],
-      displayName: 'root'
+      displayName: 'root',
+      treeId: 'ID'
     };
 
     when(testCaseServiceMock.getCallTree(anyString())).thenReturn(Promise.resolve(node));
@@ -219,7 +260,8 @@ describe('TestExecNavigatorComponent', () => {
       children: [],
       id: 'some/test.tcl'
     };
-    when(testCaseServiceMock.getCallTree(testNode.id)).thenReturn(Promise.resolve({ displayName: 'displayName', children: [] }));
+    when(testCaseServiceMock.getCallTree(testNode.id)).thenReturn(
+      Promise.resolve({ displayName: 'displayName', treeId: 'ID', children: [] }));
 
     // when
     messagingService.publish('test.selected', testNode);
@@ -244,7 +286,8 @@ describe('TestExecNavigatorComponent', () => {
       children: [],
       id: 'some/test.tcl'
     };
-    when(testCaseServiceMock.getCallTree(testNode.id)).thenReturn(Promise.resolve({ displayName: 'displayName', children: [] }));
+    when(testCaseServiceMock.getCallTree(testNode.id)).thenReturn(
+      Promise.resolve({ displayName: 'displayName', treeId: 'ID', children: [] }));
     messagingService.publish('test.selected', testNode);
     tick();
     fixture.detectChanges();

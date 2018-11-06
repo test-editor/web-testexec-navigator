@@ -48,7 +48,7 @@ describe('TestCaseService', () => {
     (httpMock: HttpTestingController, testCaseService: TestCaseService) => {
     // given
     const tclFilePath = 'path/to/file?.tcl';
-    const expectedCallTreeNode = { displayName: 'my-root-node', children: [] };
+    const expectedCallTreeNode = { displayName: 'my-root-node', treeId: 'ID', children: [] };
     const expectedRequest = {
       method: 'GET',
       url: serviceConfig.testCaseServiceUrl + '/call-tree?resource=path%2Fto%2Ffile%3F.tcl'

@@ -312,8 +312,8 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       collapsedCssClasses: collapsedCssClass,
       expandedCssClasses: expandedCssClass,
       leafCssClasses: leafCssClass,
-      id: 'ID' + nodeNumber,
       hover: 'not executed yet'
+      id: serviceNode.treeId,
     };
     if (root === undefined) {
       result.root = result;
@@ -367,8 +367,12 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       children: this.mergeChildTree(originalChildren, (executedCallTreeNode.children || []).map(
         (node, index) => {
           let originalNode: TreeNode;
-          if (originalChildren && originalChildren.length > index) {
-            originalNode = originalChildren[index];
+          if (originalChildren) {
+            const treeNodeId = node.id.split('/').pop();
+            const childIndex = originalChildren.findIndex((origChild) => this.compareTreeIds(treeNodeId, origChild.id) === 0);
+            if (originalChildren.length > childIndex && childIndex >= 0) {
+              originalNode = originalChildren[index];
+            }
           }
           return this.transformExecutionNode(node, originalNode, id, root);
         })),
@@ -381,10 +385,66 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     return result;
   }
 
+  public compareTreeIds(idA: string, idB: string): Number {
+    const pathA = idA.split('-');
+    const pathB = idB.split('-');
+    if ((pathA[0] === 'IDS') && (pathB[0] !== 'IDS')) {
+      return -1; // idA < idB
+    } else if ((pathA[0] === 'IDC') && (pathB[0] !== 'IDC')) {
+      return 1; // idA > idB
+    } else if ((pathB[0] === 'IDS') && (pathA[0] !== 'IDS')) {
+      return 1; // idA > idB
+    } else if ((pathB[0] === 'IDC') && (pathA[0] !== 'IDC')) {
+      return -1; // idA < idB
+    } else {
+      let index = 1;
+      while (index < pathA.length && index < pathB.length) {
+        const segmentA = parseInt(pathA[index], 10);
+        const segmentB = parseInt(pathB[index], 10);
+        if (segmentA !== segmentB) {
+          return segmentA - segmentB;
+        }
+        index ++;
+      }
+      if (pathA.length < pathB.length) {
+        return -1; // idA < idB
+      } else if (pathA.length > pathB.length) {
+        return 1; // idA > idB
+      } else {
+        return 0;
+      }
+    }
+  }
+
   private mergeChildTree(originalChildren: TreeNode[], childrenUpdate: TreeNode[]): TreeNode[] {
-    // initial naiive implementation to merge the children with planned executions
     if (originalChildren && originalChildren.length > childrenUpdate.length) {
-      return childrenUpdate.concat(originalChildren.splice(childrenUpdate.length));
+      let originalChildIndex = 0;
+      let executedChildIndex = 0;
+      const newChildren = new Array();
+      while (originalChildIndex < originalChildren.length || executedChildIndex < childrenUpdate.length) {
+        if (originalChildIndex >= originalChildren.length) {
+          newChildren.push(childrenUpdate[executedChildIndex]);
+          executedChildIndex++;
+        } else if (executedChildIndex >= childrenUpdate.length) {
+          newChildren.push(originalChildren[originalChildIndex]);
+          originalChildIndex++;
+        } else {
+          const completeExecutedIds = childrenUpdate[executedChildIndex].id.split('/');
+          const comparedAtoB = this.compareTreeIds(originalChildren[originalChildIndex].id, completeExecutedIds.pop());
+          if (comparedAtoB <= -1) {
+            newChildren.push(originalChildren[originalChildIndex]);
+            originalChildIndex++;
+          } else if (comparedAtoB >= 1) {
+            newChildren.push(childrenUpdate[executedChildIndex]);
+            executedChildIndex++;
+          } else {
+            newChildren.push(childrenUpdate[executedChildIndex]);
+            originalChildIndex++;
+            executedChildIndex++;
+          }
+        }
+      }
+      return newChildren;
     }
     return childrenUpdate;
   }
