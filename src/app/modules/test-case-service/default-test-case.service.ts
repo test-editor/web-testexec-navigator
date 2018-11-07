@@ -7,6 +7,7 @@ import { HttpProviderService } from '../http-provider-service/http-provider.serv
 // API provided by service backend
 export class CallTreeNode {
   displayName: string;
+  treeId: string;
   children: CallTreeNode[];
 }
 
