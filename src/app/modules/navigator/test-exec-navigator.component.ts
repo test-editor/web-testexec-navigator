@@ -6,7 +6,7 @@ import { Subscription } from 'rxjs/Subscription';
 import { TestSuiteExecutionStatus, TestExecutionService,
          ExecutedCallTreeNode, ExecutedCallTree } from '../test-execution-service/test-execution.service';
 import { TestExecutionState } from '../test-execution-service/test-execution-state';
-import { TEST_NAVIGATION_SELECT, TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED,
+import { TEST_NAVIGATION_SELECT, TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED, TEST_EXECUTION_TREE_LOADED,
          TestRunCompletedPayload, TEST_EXECUTION_FINISHED, TEST_EXECUTION_FAILED } from '../event-types-out';
 import { TEST_EXECUTE_REQUEST, NAVIGATION_OPEN,
          NavigationOpenPayload, TEST_SELECTED, TEST_CANCEL_REQUEST } from '../event-types-in';
@@ -47,7 +47,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     onClick: (node) => {
       this.selectedNode = node;
       this.messagingService.publish(TEST_NAVIGATION_SELECT, node.id);
-      this.log('sending TEST_NAVIGATION_SELECT', node.id);
+      this.log('sending TEST_NAVIGATION_SELECT for executed node', node.id);
     }
   };
 
@@ -92,13 +92,13 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     this.testRunCompletedSubscription =
       this.messagingService.subscribe(TEST_EXECUTION_FINISHED, (testSuiteRun: TestRunCompletedPayload) => {
         this.log('received ' + TEST_EXECUTION_FINISHED, testSuiteRun);
-        this.loadExecutedTreeFor(testSuiteRun.path, testSuiteRun.resourceURL);
+        this.loadExecutedTreeFor(testSuiteRun.path, testSuiteRun.resourceURL, true);
         this.switchToIdleStatus();
       });
     this.testRunFailedSubscription =
       this.messagingService.subscribe(TEST_EXECUTION_FAILED, (testSuiteRun: TestRunCompletedPayload) => {
         this.log('received ' + TEST_EXECUTION_FAILED, testSuiteRun);
-        this.loadExecutedTreeFor(testSuiteRun.path, testSuiteRun.resourceURL);
+        this.loadExecutedTreeFor(testSuiteRun.path, testSuiteRun.resourceURL, true);
         this.switchToIdleStatus();
       });
   }
@@ -185,7 +185,9 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       suiteStatus = await this.testExecutionService.getStatus(testId);
       this.log('got status', suiteStatus);
       executionStatus = suiteStatus.status;
-    }
+      this.log('updating execution tree');
+      await this.loadExecutedTreeFor(tclPath, testId);
+   }
     this.log('got final test status', suiteStatus);
     const result: TestRunCompletedPayload = {
       path: tclPath,
@@ -232,7 +234,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   // TODO: handle all test runs as opposed to just the first one (i.e. iterate executedCallTree.testRuns as opposed to using element [0])
-  async loadExecutedTreeFor(path: string, resourceURL: string): Promise<void> {
+  async loadExecutedTreeFor(path: string, resourceURL: string, updateExecutionStatus?: boolean): Promise<void> {
     this.log('call backend for testexecution service');
     try {
       const callTreeNode = await this.testCaseService.getCallTree(path);
@@ -241,10 +243,15 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       const transformedCallTreeNode = this.transformTreeNode(callTreeNode);
       const executedTree = await this.testExecutionService.getCallTree(resourceURL);
       this.log('got executed tree node', executedTree);
-      executedTree.testRuns[0].children.forEach(child => this.updateExecutionStatus(child));
-      this.treeNode = this.transformExecutionTree(executedTree, transformedCallTreeNode);
-      this.treeNode.expanded = true;
-      this.treeNode.children.forEach(child => this.updateExpansionStatus(child));
+      if (executedTree.testRuns) {
+        if (updateExecutionStatus) {
+          executedTree.testRuns[0].children.forEach(child => this.updateExecutionStatus(child));
+        }
+        this.treeNode = this.transformExecutionTree(executedTree, transformedCallTreeNode);
+        this.treeNode.expanded = true;
+        this.treeNode.children.forEach(child => this.updateExpansionStatus(child));
+        this.messagingService.publish(TEST_EXECUTION_TREE_LOADED, {});
+      }
     } catch (error) {
       this.log('ERROR', error);
     }
@@ -283,6 +290,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       this.log('got testexec call tree answer from backend', callTreeNode);
       this.runningNumber = 0;
       this.treeNode = this.transformTreeNode(callTreeNode);
+      this.messagingService.publish(TEST_EXECUTION_TREE_LOADED, {});
     } catch (error) {
       this.log('ERROR', error);
     }
@@ -312,7 +320,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       collapsedCssClasses: collapsedCssClass,
       expandedCssClasses: expandedCssClass,
       leafCssClasses: leafCssClass,
-      hover: 'not executed yet'
+      hover: 'not executed yet',
       id: serviceNode.treeId,
     };
     if (root === undefined) {
@@ -326,7 +334,6 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   // TODO: handle all test runs as opposed to just the first one (i.e. iterate executedCallTree.testRuns as opposed to using element [0])
   private transformExecutionTree(executedCallTree: ExecutedCallTree, callTree: TreeNode): TreeNode {
-    const rootID = new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId, executedCallTree.testRuns[0].testRunId);
     const result: TreeNode = {
       name: 'Testrun: ' + executedCallTree.started,
       expanded: true,
@@ -335,12 +342,16 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       collapsedCssClasses: 'fa-chevron-right',
       expandedCssClasses: 'fa-chevron-down',
       leafCssClasses: 'fa-folder',
-      id: rootID.toPathString(),
+      id: '', // initialized later (see below)
       hover: `Test Suite [Run]: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}]`
     };
-    result.root = result;
-    result.children = (executedCallTree.testRuns[0].children || [])
-      .map(node => this.transformExecutionNode(node, callTree, rootID, result.root));
+    if (executedCallTree.testRuns) {
+      const rootID = new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId, executedCallTree.testRuns[0].testRunId);
+      result.root = result;
+      result.id = rootID.toPathString();
+      result.children = (executedCallTree.testRuns[0].children || [])
+        .map(node => this.transformExecutionNode(node, callTree, rootID, result.root));
+    }
     return result;
   }
 
@@ -485,14 +496,6 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       result = result + ' ran ' + this.formatNanoseconds(Number(executedCallTreeNode.leave) - Number(executedCallTreeNode.enter));
     }
 
-    const variables: String[] = new Array<String>();
-    if (executedCallTreeNode.preVariables) {
-      Object.keys(executedCallTreeNode.preVariables).forEach(key => {
-        variables.push(key + ' = "' + executedCallTreeNode.preVariables[key] + '"');
-      });
-      result = result + ' with ' + variables.join(', ');
-    }
-
     return result;
   }
 
@@ -592,7 +595,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   loadTestRun(testRunItem: UITestRun) {
     this.log('loading ' + testRunItem.displayName);
-    this.loadExecutedTreeFor(testRunItem.executingTclPaths[0], testRunItem.testSuitRunResourceUrl);
+    this.loadExecutedTreeFor(testRunItem.executingTclPaths[0], testRunItem.testSuitRunResourceUrl, true);
   }
 
 }

@@ -19,3 +19,6 @@ export const TEST_EXECUTION_FINISHED = 'test.execution.finished';
 export const TEST_EXECUTION_FAILED = 'test.execution.failed';
 
 export const HTTP_CLIENT_NEEDED = 'httpClient.needed';
+
+// no payload
+export const TEST_EXECUTION_TREE_LOADED = 'test.execution.tree.loaded';
