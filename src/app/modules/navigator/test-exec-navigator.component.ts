@@ -399,31 +399,21 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   public compareTreeIds(idA: string, idB: string): Number {
     const pathA = idA.split('-');
     const pathB = idB.split('-');
-    if ((pathA[0] === 'IDS') && (pathB[0] !== 'IDS')) {
+    let index = 1;
+    while (index < pathA.length && index < pathB.length) {
+      const segmentA = parseInt(pathA[index], 10);
+      const segmentB = parseInt(pathB[index], 10);
+      if (segmentA !== segmentB) {
+        return segmentA - segmentB;
+      }
+      index ++;
+    }
+    if (pathA.length < pathB.length) {
       return -1; // idA < idB
-    } else if ((pathA[0] === 'IDC') && (pathB[0] !== 'IDC')) {
+    } else if (pathA.length > pathB.length) {
       return 1; // idA > idB
-    } else if ((pathB[0] === 'IDS') && (pathA[0] !== 'IDS')) {
-      return 1; // idA > idB
-    } else if ((pathB[0] === 'IDC') && (pathA[0] !== 'IDC')) {
-      return -1; // idA < idB
     } else {
-      let index = 1;
-      while (index < pathA.length && index < pathB.length) {
-        const segmentA = parseInt(pathA[index], 10);
-        const segmentB = parseInt(pathB[index], 10);
-        if (segmentA !== segmentB) {
-          return segmentA - segmentB;
-        }
-        index ++;
-      }
-      if (pathA.length < pathB.length) {
-        return -1; // idA < idB
-      } else if (pathA.length > pathB.length) {
-        return 1; // idA > idB
-      } else {
-        return 0;
-      }
+      return 0;
     }
   }
 
