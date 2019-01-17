@@ -198,9 +198,10 @@
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/@testeditor/messaging-service/-/messaging-service-1.4.1.tgz#de0f8cdd18bc6b19ad01a82ba6d0f0f75ff85266"
 
-"@testeditor/testeditor-commons@~0.3.0":
-  version "0.3.5"
-  resolved "https://registry.yarnpkg.com/@testeditor/testeditor-commons/-/testeditor-commons-0.3.5.tgz#634d4292699e81ae6f95bc765646f4e00a476b8b"
+"@testeditor/testeditor-commons@~0.5.0":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/@testeditor/testeditor-commons/-/testeditor-commons-0.5.2.tgz#87cc28a7f5c9463a3280adc9bf569af5c7bd692b"
+  integrity sha512-7NNo9G5ceK2X1txAh54S+blkjkb5xA3kkyicm7vOg2Yp3Fwh9DQ0NuSTR3Ibq7PzNSVRqtEXtkbtCRmDc9Q/3g==
   dependencies:
     tslib "^1.7.1"
 
@@ -6849,8 +6850,9 @@ unzip-response@^2.0.1:
   resolved "https://registry.yarnpkg.com/unzip-response/-/unzip-response-2.0.1.tgz#d2f0f737d16b0615e72a6935ed04214572d56f97"
 
 upath@^1.0.0:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/upath/-/upath-1.0.4.tgz#ee2321ba0a786c50973db043a50b7bcba822361d"
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/upath/-/upath-1.1.0.tgz#35256597e46a581db4793d0ce47fa9aebfc9fabd"
+  integrity sha512-bzpH/oBhoS/QI/YtbkqCg6VEiPYjSZtrHQM6/QnJS6OL9pKUFLqb3aFh4Scvwm45+7iAgiMkLhSbaZxUqmrprw==
 
 update-notifier@^2.3.0:
   version "2.5.0"
