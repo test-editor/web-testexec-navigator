@@ -66,13 +66,14 @@ describe('TestExecNavigatorComponent', () => {
    ['ID-1-2-3', 'ID-1-2-4', -1]
   ].forEach((idPair) => {
 
-    fit('compares tree ids correctly: ' + idPair, () => {
+    it('compares tree ids correctly: ' + idPair, () => {
       const compared = component.compareTreeIds(idPair[0] as string, idPair[1] as string);
 
       expect(Math.sign(compared as number)).toEqual(idPair[2] as number, idPair[0] as string + ' compared to ' + idPair[1] as string);
     });
   });
 
+  // TODO  Double check test assumptions
   it('should provide transformed call tree merged with static call tree from backend (in case of errors during test execution)',
      fakeAsync(async () => {
        // given
@@ -151,10 +152,10 @@ describe('TestExecNavigatorComponent', () => {
        expect(testCaseRoot.children.length).toEqual(3, 'both the actually executed nodes and the expected to be run node are expected');
        expect(testCaseRoot.children[0].name).toMatch('real first');
        expect(testCaseRoot.children[0].expandedCssClasses).toMatch('.*tree-item-ok.*');
-       expect(testCaseRoot.children[0].hover).toMatch('.*var = "val".*');
+       expect(testCaseRoot.children[0].hover).toMatch('OK: ran .* ns');
        expect(testCaseRoot.children[1].name).toMatch('real other');
-       expect(testCaseRoot.children[1].expandedCssClasses).toMatch('.*tree-item-in-error.*');
-       expect(testCaseRoot.children[1].hover).toMatch('ERROR:.*');
+       expect(testCaseRoot.children[1].expandedCssClasses).toMatch('fa-circle');
+       expect(testCaseRoot.children[1].hover).toMatch('unknown:');
        expect(testCaseRoot.children[2].name).toMatch('still another');
        expect(testCaseRoot.children[2].expandedCssClasses).not.toMatch('.*tree-item.*', 'node not executed should not be marked');
        expect(testCaseRoot.expandedCssClasses).toMatch('.*tree-item-in-error.*');
@@ -165,11 +166,11 @@ describe('TestExecNavigatorComponent', () => {
     const node: CallTreeNode = {
       children: [{
         displayName: 'child',
-        treeId: 'ID',
+        treeId: 'ID1',
         children: []
       }],
       displayName: 'root',
-      treeId: 'ID'
+      treeId: 'ID0'
     };
 
     when(testCaseServiceMock.getCallTree(anyString())).thenReturn(Promise.resolve(node));
@@ -178,7 +179,7 @@ describe('TestExecNavigatorComponent', () => {
     await component.updateTreeFor('test.tcl');
 
     // then
-    expect(component.treeNode).toEqual({
+    expect(component.treeNode).toEqual(TreeNode.create({
       name: 'root',
       expanded: true,
       collapsedCssClasses: 'fa-chevron-right',
@@ -186,12 +187,10 @@ describe('TestExecNavigatorComponent', () => {
       leafCssClasses: 'fa-folder',
       id: 'ID0',
       hover: 'not executed yet',
-      root: component.treeNode,
       children: [
         {
           name: 'child',
           expanded: true,
-          root: component.treeNode,
           children: [ ],
           collapsedCssClasses: 'fa-circle',
           expandedCssClasses: 'fa-circle',
@@ -200,7 +199,7 @@ describe('TestExecNavigatorComponent', () => {
           hover: 'not executed yet'
         }
       ]
-    });
+    }));
   }));
 
   it('unselects previous selection, sets "selected" flag, and publishes TEST_NAVIGATION_SELECT event when element is clicked', () => {
@@ -208,10 +207,10 @@ describe('TestExecNavigatorComponent', () => {
     let actualPayload = null;
     messagingService.subscribe(TEST_NAVIGATION_SELECT, (payload) => actualPayload = payload);
 
-    component.treeNode = { name: 'root', expanded: true, root: null, children: [
-      { name: 'child1', root: null, children: [], id: '1234/5678/9/0' },
-      { name: 'child2', root: null, children: [] }
-    ] };
+    component.treeNode = TreeNode.create({ name: 'root', expanded: true, children: [
+      { name: 'child1',  children: [], id: '1234/5678/9/0' },
+      { name: 'child2',  children: [] }
+    ] });
     component.selectedNode = component.treeNode.children[1];
     fixture.detectChanges();
 
@@ -237,12 +236,11 @@ describe('TestExecNavigatorComponent', () => {
   it('activates execute button as soon as a test is available', fakeAsync(() => {
     // given
     component.treeNode = EMPTY_TREE;
-    const testNode: TreeNode = {
+    const testNode = TreeNode.create({
       name: 'name',
-      root: null,
       children: [],
       id: 'some/test.tcl'
-    };
+    });
     when(testCaseServiceMock.getCallTree(testNode.id)).thenReturn(
       Promise.resolve({ displayName: 'displayName', treeId: 'ID', children: [] }));
 
@@ -263,12 +261,11 @@ describe('TestExecNavigatorComponent', () => {
     messagingService.subscribe('test.execute.request', () => {
       testExecutionRequested = true;
     });
-    const testNode: TreeNode = {
+    const testNode = TreeNode.create ({
       name: 'name',
-      root: null,
       children: [],
       id: 'some/test.tcl'
-    };
+    });
     when(testCaseServiceMock.getCallTree(testNode.id)).thenReturn(
       Promise.resolve({ displayName: 'displayName', treeId: 'ID', children: [] }));
     messagingService.publish('test.selected', testNode);
@@ -337,12 +334,11 @@ describe('TestExecNavigatorComponent', () => {
     component.switchToTestCurrentlyRunningStatus();
 
     // when
-    const testNode: TreeNode = {
+    const testNode = TreeNode.create ({
       name: 'name',
-      root: null,
       children: [],
       id: 'some/test.tcl'
-    };
+    });
     messagingService.publish('test.selected', testNode);
     tick();
 
@@ -428,7 +424,7 @@ describe('TestExecNavigatorComponent', () => {
     fixture.detectChanges();
 
     // then
-    expect(component.loadExecutedTreeFor).toHaveBeenCalledWith(tclPath, 'someUrl');
+    expect(component.loadExecutedTreeFor).toHaveBeenCalledWith(tclPath, 'someUrl', true);
   });
 
   // this test runs for chrome only

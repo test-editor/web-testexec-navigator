@@ -52,7 +52,7 @@
     "@angular/common": "^5.2.0",
     "@angular/core": "^5.2.0",
     "@testeditor/messaging-service": "^1.4.0",
-    "@testeditor/testeditor-commons": "~0.3.0",
+    "@testeditor/testeditor-commons": "~0.5.0",
     "bootstrap": ">=4.1.2",
     "font-awesome": ">=4.0.0",
     "rxjs": "^5.5.0"
@@ -71,7 +71,7 @@
     "@angular/platform-browser-dynamic": "^5.2.0",
     "@angular/router": "^5.2.0",
     "@testeditor/messaging-service": "~1.4.0",
-    "@testeditor/testeditor-commons": "~0.3.0",
+    "@testeditor/testeditor-commons": "~0.5.0",
     "@types/jasmine": "~2.8.3",
     "@types/jasminewd2": "~2.0.2",
     "@types/node": "~9.6.6",
