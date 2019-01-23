@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { async, ComponentFixture, TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
 
 import { TestExecNavigatorComponent, EMPTY_TREE, UITestRunStatus } from './test-exec-navigator.component';
 import { TreeViewerModule, TreeNode } from '@testeditor/testeditor-commons';
@@ -312,6 +312,51 @@ describe('TestExecNavigatorComponent', () => {
 
     // then
     expect(component.switchToTestCurrentlyRunningStatus).toHaveBeenCalled();
+  }));
+
+  it('keeps button enabled for cancelling if a test execution was started', fakeAsync(() => {
+    // given
+    const runButton = fixture.debugElement.queryAll(By.css('button[id=' + idPrefix + 'icon-run]'))[0].nativeElement;
+    const testNode = TreeNode.create ({ name: 'name', children: [], id: 'some/test.tcl' });
+    when(testCaseServiceMock.getCallTree(testNode.id)).thenReturn(
+      Promise.resolve({ displayName: 'displayName', treeId: 'ID', children: [] }));
+    messagingService.publish('test.selected', testNode);
+    tick();
+    fixture.detectChanges();
+
+    // when
+    runButton.click();
+    tick();
+
+    // then
+    expect(runButton.disabled).toBeFalsy();
+  }));
+
+  it('sends a cancel request if the button is clicked while a test is running', fakeAsync(() => {
+    // given
+    let testCancellationRequested = false;
+    messagingService.subscribe('test.cancel.request', () => {
+      testCancellationRequested = true;
+    });
+    const runButton = fixture.debugElement.queryAll(By.css('button[id=' + idPrefix + 'icon-run]'))[0].nativeElement;
+    const testNode = TreeNode.create ({ name: 'name', children: [], id: 'some/test.tcl' });
+    when(testCaseServiceMock.getCallTree(testNode.id)).thenReturn(
+      Promise.resolve({ displayName: 'displayName', treeId: 'ID', children: [] }));
+    when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve('someURL'));
+    when(testExecutionServiceMock.getStatus(anyString())).thenReturn(
+      Promise.resolve({ resourceURL: 'some', status: TestExecutionState.Running }),
+      new Promise((resolve) => setTimeout(() => resolve({ resourceURL: 'some', status: TestExecutionState.LastRunSuccessful }), 1))
+    );
+    messagingService.publish('test.selected', testNode);
+    tick(); fixture.detectChanges();
+    runButton.click(); tick(); expect(component.testIsRunning()).toBeTruthy('precondition not met: test must be running');
+
+    // when
+    runButton.click(); tick();
+
+    // then
+    expect(testCancellationRequested).toBeTruthy();
+    flush();
   }));
 
   it('switches button back to run if test execution failed to start', fakeAsync(() => {
