@@ -22,3 +22,9 @@ export const HTTP_CLIENT_NEEDED = 'httpClient.needed';
 
 // no payload
 export const TEST_EXECUTION_TREE_LOADED = 'test.execution.tree.loaded';
+
+export interface SnackbarMessage {
+  message: string;
+  timeout?: number;
+}
+export const SNACKBAR_DISPLAY_NOTIFICATION = 'snackbar.display.notification';

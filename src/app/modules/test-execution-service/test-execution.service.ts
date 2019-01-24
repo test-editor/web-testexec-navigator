@@ -3,7 +3,7 @@ import { TestExecutionState } from './test-execution-state';
 import { HttpProviderService } from '../http-provider-service/http-provider.service';
 import { MessagingService } from '@testeditor/messaging-service';
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { resource } from 'selenium-webdriver/http';
 
 export class ExecutedCallTree {
@@ -65,6 +65,13 @@ export abstract class TestExecutionService {
    */
   abstract getStatus(url: string): Promise<TestSuiteExecutionStatus>;
   abstract getAllStatus(): Promise<TestSuiteExecutionStatus[]>;
+
+  /**
+   * Request that a previously started test suite run be terminated
+   * @param url the resource url of a test suite.
+   * If termination is unsuccessful, an exception will be thrown.
+   */
+  abstract async terminate(url: string): Promise<void>;
 }
 
 @Injectable()
@@ -107,6 +114,24 @@ export class DefaultTestExecutionService extends TestExecutionService {
     return allStatus.map((entry) => ({
       resourceURL: `${this.serviceUrl}/${entry.key.suiteId}/${entry.key.suiteRunId}`,
       status: this.toTestExecutionState(entry.status) }));
+  }
+
+  async terminate(url: string): Promise<void> {
+    const http = await this.httpClientProvider.getHttpClient();
+    try {
+      return await http.delete<void>(url).toPromise();
+    } catch (error) {
+      if (error instanceof HttpErrorResponse) {
+        console.error(error.message, error);
+        throw new Error (error.error);
+      } else if (error instanceof Error) {
+        console.error(error.message, error);
+        throw error;
+      } else {
+        console.error(error);
+        throw new Error(error);
+      }
+    }
   }
 
   private toTestExecutionState(state: string): TestExecutionState {

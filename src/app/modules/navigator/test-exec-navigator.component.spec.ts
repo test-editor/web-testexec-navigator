@@ -4,9 +4,9 @@ import { TestExecNavigatorComponent, EMPTY_TREE, UITestRunStatus } from './test-
 import { TreeViewerModule, TreeNode } from '@testeditor/testeditor-commons';
 import { MessagingModule, MessagingService } from '@testeditor/messaging-service';
 import { TestCaseService, CallTreeNode, DefaultTestCaseService } from '../test-case-service/default-test-case.service';
-import { mock, instance, capture, anyString, when, resetCalls, verify } from 'ts-mockito';
+import { mock, instance, capture, anyString, when, resetCalls, verify, anything } from 'ts-mockito';
 import { ExecutedCallTree, TestExecutionService, DefaultTestExecutionService } from '../test-execution-service/test-execution.service';
-import { TEST_NAVIGATION_SELECT } from '../event-types-out';
+import { TEST_NAVIGATION_SELECT, SNACKBAR_DISPLAY_NOTIFICATION, SnackbarMessage } from '../event-types-out';
 import { By } from '@angular/platform-browser';
 import { HttpProviderService } from '../http-provider-service/http-provider.service';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
@@ -332,7 +332,7 @@ describe('TestExecNavigatorComponent', () => {
     expect(runButton.disabled).toBeFalsy();
   }));
 
-  it('sends a cancel request if the button is clicked while a test is running', fakeAsync(() => {
+  it('sends "test.cancel.request" via message bus if the button is clicked while a test is running', fakeAsync(() => {
     // given
     let testCancellationRequested = false;
     messagingService.subscribe('test.cancel.request', () => {
@@ -356,6 +356,98 @@ describe('TestExecNavigatorComponent', () => {
 
     // then
     expect(testCancellationRequested).toBeTruthy();
+    flush();
+  }));
+
+  it('sends request to cancel test execution to the backend when cancel button is clicked', fakeAsync(() => {
+    // given
+    const runButton = fixture.debugElement.queryAll(By.css('button[id=' + idPrefix + 'icon-run]'))[0].nativeElement;
+    const testNode = TreeNode.create ({ name: 'name', children: [], id: 'some/test.tcl' });
+    const executionUrl = 'http://example.org/0/0';
+    when(testCaseServiceMock.getCallTree(testNode.id)).thenReturn(
+      Promise.resolve({ displayName: 'displayName', treeId: 'ID', children: [] }));
+    when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve(executionUrl));
+    when(testExecutionServiceMock.getStatus(anyString())).thenReturn(
+      Promise.resolve({ resourceURL: executionUrl, status: TestExecutionState.Running }),
+      new Promise((resolve) => setTimeout(() => resolve({ resourceURL: 'some', status: TestExecutionState.LastRunSuccessful }), 1))
+    );
+    when(testExecutionServiceMock.terminate(anyString())).thenResolve();
+    messagingService.publish('test.selected', testNode);
+    tick(); fixture.detectChanges();
+    runButton.click(); tick(); expect(component.testIsRunning()).toBeTruthy('precondition not met: test must be running');
+
+    // when
+    runButton.click(); tick();
+
+    // then
+    verify(testExecutionServiceMock.terminate(executionUrl)).once();
+    flush();
+  }));
+
+  it('publishes a snack bar notification via the message bus when a test could not be terminated', fakeAsync(async () => {
+    // given
+    const expectedMessage = 'test could not be terminated!'; let actualMessage: string = null;
+    const expectedTimeout = 5000; let actualTimeout: number = null;
+    messagingService.subscribe(SNACKBAR_DISPLAY_NOTIFICATION, (payload: SnackbarMessage) => {
+      actualMessage = payload.message;
+      actualTimeout = payload.timeout;
+    });
+
+    when(testExecutionServiceMock.terminate(anyString())).thenReject(new Error(expectedMessage));
+
+    const runButton = fixture.debugElement.queryAll(By.css('button[id=' + idPrefix + 'icon-run]'))[0].nativeElement;
+    const testNode = TreeNode.create ({ name: 'name', children: [], id: 'some/test.tcl' });
+    const executionUrl = 'http://example.org/0/0';
+    when(testCaseServiceMock.getCallTree(testNode.id)).thenReturn(
+      Promise.resolve({ displayName: 'displayName', treeId: 'ID', children: [] }));
+    when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(Promise.resolve(executionUrl));
+    when(testExecutionServiceMock.getStatus(anyString())).thenReturn(
+      Promise.resolve({ resourceURL: executionUrl, status: TestExecutionState.Running }),
+      new Promise((resolve) => setTimeout(() => resolve({ resourceURL: 'some', status: TestExecutionState.LastRunSuccessful }), 1))
+    );
+    when(testExecutionServiceMock.terminate(anyString())).thenResolve();
+    messagingService.publish('test.selected', testNode);
+    tick(); fixture.detectChanges();
+    runButton.click(); tick(); expect(component.testIsRunning()).toBeTruthy('precondition not met: test must be running');
+
+    // when
+    await component.handleCancelRequest();
+
+    // then
+    expect(actualMessage).toEqual(expectedMessage);
+    expect(actualTimeout).toEqual(expectedTimeout);
+    flush();
+  }));
+
+  it('publishes a snack bar notification when trying to terminate a test that has not yet properly started', fakeAsync(() => {
+    // given
+    const expectedMessage = 'Cannot cancel test execution: no tests seem to be running.'; let actualMessage: string = null;
+    const expectedTimeout = 5000; let actualTimeout: number = null;
+
+    messagingService.subscribe(SNACKBAR_DISPLAY_NOTIFICATION, (payload: SnackbarMessage) => {
+      actualMessage = payload.message;
+      actualTimeout = payload.timeout;
+    });
+
+    const runButton = fixture.debugElement.queryAll(By.css('button[id=' + idPrefix + 'icon-run]'))[0].nativeElement;
+    const testNode = TreeNode.create ({ name: 'name', children: [], id: 'some/test.tcl' });
+    const executionUrl = 'http://example.org/0/0';
+    when(testCaseServiceMock.getCallTree(testNode.id)).thenReturn(
+      Promise.resolve({ displayName: 'displayName', treeId: 'ID', children: [] }));
+    when(testExecutionServiceMock.execute('some/test.tcl')).thenReturn(
+      new Promise((resolve) => setTimeout(() => resolve(executionUrl), 1))
+    );
+    messagingService.publish('test.selected', testNode);
+    tick(); fixture.detectChanges();
+    runButton.click(); tick();
+
+    // when
+    runButton.click(); tick();
+
+    // then
+    expect(actualMessage).toEqual(expectedMessage);
+    expect(actualTimeout).toEqual(expectedTimeout);
+    verify(testExecutionServiceMock.terminate(executionUrl)).never();
     flush();
   }));
 

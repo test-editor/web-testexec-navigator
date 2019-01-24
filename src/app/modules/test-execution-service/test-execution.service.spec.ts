@@ -8,6 +8,7 @@ import { HttpProviderService } from '../http-provider-service/http-provider.serv
 
 export const HTTP_STATUS_OK = 200;
 export const HTTP_STATUS_CREATED = 201;
+export const HTTP_STATUS_INTERNAL_SERVER_ERROR = 500;
 
 describe('TestExecutionService', () => {
   let serviceConfig: TestExecutionServiceConfig;
@@ -62,4 +63,42 @@ describe('TestExecutionService', () => {
       httpMock.match(testExecutionRequest)[0].flush(mockResponse);
     })));
 
+    it('terminate makes DELETE request', fakeAsync(inject([HttpTestingController, TestExecutionService],
+      (httpMock: HttpTestingController, executionService: TestExecutionService) => {
+        // given
+        const testSuiteResourceUrl = 'http://example.org/test-suite/1234/5678';
+        const testExecutionRequest = {
+          method: 'DELETE',
+          url: testSuiteResourceUrl
+        };
+
+        // when
+        executionService.terminate(testSuiteResourceUrl)
+
+        // then
+        .then(() => expect().nothing());
+        tick();
+        httpMock.expectOne(testExecutionRequest).flush(null, {status: HTTP_STATUS_OK, statusText: 'OK'});
+      })));
+
+      it('terminate throws exception if backend responds with status 500', fakeAsync(inject([HttpTestingController, TestExecutionService],
+        (httpMock: HttpTestingController, executionService: TestExecutionService) => {
+          // given
+          const serverErrorMessage = 'Could not terminate test';
+          const testSuiteResourceUrl = 'http://example.org/test-suite/1234/5678';
+          const testExecutionRequest = {
+            method: 'DELETE',
+            url: testSuiteResourceUrl
+          };
+
+          // when
+          executionService.terminate(testSuiteResourceUrl)
+
+          // then
+          .then(() => fail('expected exception to be trown!'))
+          .catch((error: Error) => expect(error.message).toEqual(serverErrorMessage));
+          tick();
+          httpMock.expectOne(testExecutionRequest).flush(serverErrorMessage,
+            {status: HTTP_STATUS_INTERNAL_SERVER_ERROR, statusText: 'Internal Server Error'});
+        })));
 });
