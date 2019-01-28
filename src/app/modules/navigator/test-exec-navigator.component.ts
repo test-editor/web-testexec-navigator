@@ -7,7 +7,7 @@ import { TestSuiteExecutionStatus, TestExecutionService,
          ExecutedCallTreeNode, ExecutedCallTree } from '../test-execution-service/test-execution.service';
 import { TestExecutionState } from '../test-execution-service/test-execution-state';
 import { TEST_NAVIGATION_SELECT, TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED, TEST_EXECUTION_TREE_LOADED,
-         TestRunCompletedPayload, TEST_EXECUTION_FINISHED, TEST_EXECUTION_FAILED } from '../event-types-out';
+         TestRunCompletedPayload, TEST_EXECUTION_FINISHED, TEST_EXECUTION_FAILED, SNACKBAR_DISPLAY_NOTIFICATION } from '../event-types-out';
 import { TEST_EXECUTE_REQUEST, NAVIGATION_OPEN,
          NavigationOpenPayload, TEST_SELECTED, TEST_CANCEL_REQUEST } from '../event-types-in';
 import { TestRunId } from './test-run-id';
@@ -34,6 +34,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   readonly idPrefix = idPrefix;
 
   private runCancelButtonClass = this.executeIcon;
+  private executingTestResourceUrl: string = null;
   private testExecutionSubscription: Subscription;
   private testExecutionFailedSubscription: Subscription;
   private testCancelSubscription: Subscription;
@@ -128,9 +129,20 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     }
   }
 
-  handleCancelRequest(): void {
-    // TODO: to be implemented
-    this.log('ERROR: cancel running test not implemented yet');
+  async handleCancelRequest(): Promise<void> {
+    if (this.executingTestResourceUrl) {
+      try {
+        await this.testExecutionService.terminate(this.executingTestResourceUrl);
+      } catch (error) {
+        this.messagingService.publish(SNACKBAR_DISPLAY_NOTIFICATION, {
+          message: (error as Error).message,
+          timeout: 5000
+        });
+      }
+    } else {
+      this.messagingService.publish(SNACKBAR_DISPLAY_NOTIFICATION,
+        { message: 'Cannot cancel test execution: no tests seem to be running.', timeout: 5000 });
+    }
   }
 
   buildUITestRunFromSingleTest(tclPath: string, executingTestResourceUrl: string, date: Date): UITestRun {
@@ -150,17 +162,17 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   async handleExecutionRequest(tclPath: string) {
     try {
       this.switchToTestCurrentlyRunningStatus();
-      const executingTestResourceUrl = await this.testExecutionService.execute(tclPath);
+      this.executingTestResourceUrl = await this.testExecutionService.execute(tclPath);
       const payload = {
         path: tclPath,
-        response: executingTestResourceUrl,
+        response: this.executingTestResourceUrl,
         message: 'Execution of "\${}" has been started.'
       };
       this.messagingService.publish(TEST_EXECUTION_STARTED, payload);
       this.log('sending TEST_EXECUTION_STARTED', payload);
-      const testRunItem = this.buildUITestRunFromSingleTest(tclPath, executingTestResourceUrl, new Date());
+      const testRunItem = this.buildUITestRunFromSingleTest(tclPath, this.executingTestResourceUrl, new Date());
       this.addTestRun(testRunItem);
-      const finalExecutionStatus = await this.testExecutionWatcher(executingTestResourceUrl, tclPath);
+      const finalExecutionStatus = await this.testExecutionWatcher(this.executingTestResourceUrl, tclPath);
       testRunItem.cssClass = finalExecutionStatus.status === TestExecutionState.LastRunSuccessful ?
         'successful' : 'failure';
       this.switchToIdleStatus();
@@ -217,6 +229,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   /** visible for testing */
   public switchToIdleStatus(): void {
     this.runCancelButtonClass = this.executeIcon;
+    this.executingTestResourceUrl = null;
     this.setupTestSelectedListener();
   }
 
