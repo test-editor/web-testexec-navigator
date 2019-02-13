@@ -1,21 +1,27 @@
 import { Component, OnInit, Output, OnDestroy, isDevMode } from '@angular/core';
-import {CommonTreeNodeActions, TreeNode, TreeViewerKeyboardConfig} from '@testeditor/testeditor-commons';
+import { CommonTreeNodeActions, TreeNode, TreeViewerKeyboardConfig, TREE_NODE_SELECTED } from '@testeditor/testeditor-commons';
 import { TestCaseService, CallTreeNode } from '../test-case-service/default-test-case.service';
 import { MessagingService } from '@testeditor/messaging-service';
 import { Subscription } from 'rxjs/Subscription';
-import { TestSuiteExecutionStatus, TestExecutionService,
-         ExecutedCallTreeNode, ExecutedCallTree } from '../test-execution-service/test-execution.service';
+import {
+  TestSuiteExecutionStatus, TestExecutionService,
+  ExecutedCallTreeNode, ExecutedCallTree
+} from '../test-execution-service/test-execution.service';
 import { TestExecutionState } from '../test-execution-service/test-execution-state';
-import { TEST_NAVIGATION_SELECT, TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED, TEST_EXECUTION_TREE_LOADED,
-         TestRunCompletedPayload, TEST_EXECUTION_FINISHED, TEST_EXECUTION_FAILED, SNACKBAR_DISPLAY_NOTIFICATION } from '../event-types-out';
-import { TEST_EXECUTE_REQUEST, NAVIGATION_OPEN,
-         NavigationOpenPayload, TEST_SELECTED, TEST_CANCEL_REQUEST } from '../event-types-in';
+import {
+  TEST_NAVIGATION_SELECT, TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED, TEST_EXECUTION_TREE_LOADED,
+  TestRunCompletedPayload, TEST_EXECUTION_FINISHED, TEST_EXECUTION_FAILED, SNACKBAR_DISPLAY_NOTIFICATION
+} from '../event-types-out';
+import {
+  TEST_EXECUTE_REQUEST, NAVIGATION_OPEN,
+  NavigationOpenPayload, TEST_SELECTED, TEST_CANCEL_REQUEST
+} from '../event-types-in';
 import { TestRunId } from './test-run-id';
 import { idPrefix } from '../module-constants';
 
-export const EMPTY_TREE = TreeNode.create ({ name: '<empty>', children: [] });
+export const EMPTY_TREE = TreeNode.create({ name: '<empty>', children: [] });
 
-export type UITestRunStatus = 'running'| 'successful' | 'failure';
+export type UITestRunStatus = 'running' | 'successful' | 'failure';
 export interface UITestRun {
   cssClass: UITestRunStatus;
   displayName: string;
@@ -35,23 +41,18 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   private runCancelButtonClass = this.executeIcon;
   private executingTestResourceUrl: string = null;
+  private treeNodeSelectedSubscription: Subscription;
   private testExecutionSubscription: Subscription;
   private testExecutionFailedSubscription: Subscription;
   private testCancelSubscription: Subscription;
   private testPathSelected: string = null;
-  private testRunList: UITestRun[] = [ ];
+  private testRunList: UITestRun[] = [];
   @Output() treeNode: TreeNode = EMPTY_TREE;
   @Output() treeConfig: TreeViewerKeyboardConfig = {
-    onDoubleClick: (node) => { node.expanded = !node.expanded; },
-    onIconClick: (node) => { node.expanded = !node.expanded; },
-    onClick: (node) => {
-      this.selectedNode = node;
-      this.messagingService.publish(TEST_NAVIGATION_SELECT, node.id);
-      this.log('sending TEST_NAVIGATION_SELECT for executed node', node.id);
-    }, onKeyPress: this.treenodeAction.arrowKeyNavigation
+    onDoubleClick: (node) => node.expanded !== undefined ? node.expanded = !node.expanded : {},
+    onIconClick: (node) => node.expanded !== undefined ? node.expanded = !node.expanded : {},
+    onKeyPress: this.treenodeAction.arrowKeyNavigation
   };
-
-  private _selectedNode: TreeNode;
 
   testSelectedSubscription: Subscription;
   testRunCompletedSubscription: Subscription;
@@ -64,18 +65,29 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.setupTreeNodeSelectedListener();
     this.setupTestExecutionFinishedListener();
     this.setupTestSelectedListener();
     this.setupTestExecutionListener();
   }
 
   ngOnDestroy() {
+    this.treeNodeSelectedSubscription.unsubscribe();
     this.testSelectedSubscription.unsubscribe();
     this.testRunCompletedSubscription.unsubscribe();
     this.testExecutionSubscription.unsubscribe();
     this.testCancelSubscription.unsubscribe();
     this.testExecutionFailedSubscription.unsubscribe();
     this.testRunFailedSubscription.unsubscribe();
+  }
+
+  setupTreeNodeSelectedListener() {
+    this.treeNodeSelectedSubscription = this.messagingService.subscribe(TREE_NODE_SELECTED, (node: TreeNode) => {
+      if (node.root === this.treeNode.root) {
+        this.messagingService.publish(TEST_NAVIGATION_SELECT, node.id);
+        this.log('sending TEST_NAVIGATION_SELECT for executed node', node.id);
+      }
+    });
   }
 
   setupTestSelectedListener() {
@@ -152,7 +164,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     const testNameOnly = paths.pop();
     const name = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
       + ' ' + testNameOnly + ' (' + paths.join('.') + ')';
-    return  { displayName: name, testSuitRunResourceUrl: executingTestResourceUrl, executingTclPaths: [ tclPath ], cssClass: 'running' };
+    return { displayName: name, testSuitRunResourceUrl: executingTestResourceUrl, executingTclPaths: [tclPath], cssClass: 'running' };
   }
 
   addTestRun(testRun: UITestRun) {
@@ -198,7 +210,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       executionStatus = suiteStatus.status;
       this.log('updating execution tree');
       await this.loadExecutedTreeFor(tclPath, testId);
-   }
+    }
     this.log('got final test status', suiteStatus);
     const result: TestRunCompletedPayload = {
       path: tclPath,
@@ -231,18 +243,6 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     this.runCancelButtonClass = this.executeIcon;
     this.executingTestResourceUrl = null;
     this.setupTestSelectedListener();
-  }
-
-  get selectedNode(): TreeNode {
-    return this._selectedNode;
-  }
-
-  set selectedNode(node: TreeNode) {
-    if (this._selectedNode) {
-      this._selectedNode.selected = false;
-    }
-    this._selectedNode = node;
-    this._selectedNode.selected = true;
   }
 
   // TODO: handle all test runs as opposed to just the first one (i.e. iterate executedCallTree.testRuns as opposed to using element [0])
@@ -309,7 +309,6 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   }
 
   private transformTreeNode(serviceNode: CallTreeNode, parent?: TreeNode): TreeNode {
-    const nodeNumber = this.runningNumber;
     this.runningNumber++;
     const isLeaf = !serviceNode.children || serviceNode.children.length === 0;
     let expandedCssClass: string;
@@ -324,7 +323,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       expandedCssClass = 'fa-chevron-down';
       leafCssClass = 'fa-folder';
     }
-    const result = TreeNode.create ({
+    const result = TreeNode.create({
       name: serviceNode.displayName,
       expanded: true,
       children: [], // initialized after root was set
@@ -335,7 +334,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       id: serviceNode.treeId,
     }, parent);
 
-    result.children =  serviceNode.children.map(node => this.transformTreeNode(node, result));
+    result.children = serviceNode.children.map(node => this.transformTreeNode(node, result));
     return result;
   }
 
@@ -355,13 +354,13 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       const rootID = new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId, executedCallTree.testRuns[0].testRunId);
       result.id = rootID.toPathString();
       result.children = (executedCallTree.testRuns[0].children || [])
-        .map(node => this.transformExecutionNode(node, callTree, rootID, result.root));
+        .map(node => this.transformExecutionNode(node, callTree, rootID, result));
     }
     return result;
   }
 
   private transformExecutionNode(executedCallTreeNode: ExecutedCallTreeNode,
-                                 original: TreeNode, baseID: TestRunId, root: TreeNode): TreeNode {
+    original: TreeNode, baseID: TestRunId, parent: TreeNode): TreeNode {
     let originalChildren: TreeNode[];
 
     if (original) {
@@ -379,24 +378,26 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     const result = TreeNode.create({
       name: executedCallTreeNode.message,
       expanded: true,
-      children: this.mergeChildTree(originalChildren, (executedCallTreeNode.children || []).map(
-        (node, index) => {
-          let originalNode: TreeNode;
-          if (originalChildren) {
-            const treeNodeId = node.id.split('/').pop();
-            const childIndex = originalChildren.findIndex((origChild) => this.compareTreeIds(treeNodeId, origChild.id) === 0);
-            if (originalChildren.length > childIndex && childIndex >= 0) {
-              originalNode = originalChildren[index];
-            }
-          }
-          return this.transformExecutionNode(node, originalNode, id, root);
-        })),
+      children: [],
       collapsedCssClasses: this.collapsedIcon(executedCallTreeNode) + statusClassString,
       expandedCssClasses: this.expandedIcon(executedCallTreeNode) + statusClassString,
       leafCssClasses: 'fa-folder',
       id: id.toPathString(),
       hover: this.hoverFor(executedCallTreeNode)
-    });
+    }, parent);
+    result.children = this.mergeChildTree(originalChildren, (executedCallTreeNode.children || []).map(
+      (node, index) => {
+        let originalNode: TreeNode;
+        if (originalChildren) {
+          const treeNodeId = node.id.split('/').pop();
+          const childIndex = originalChildren.findIndex((origChild) => this.compareTreeIds(treeNodeId, origChild.id) === 0);
+          if (originalChildren.length > childIndex && childIndex >= 0) {
+            originalNode = originalChildren[index];
+          }
+        }
+        return this.transformExecutionNode(node, originalNode, id, result);
+      }));
+
     return result;
   }
 
@@ -410,7 +411,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       if (segmentA !== segmentB) {
         return segmentA - segmentB;
       }
-      index ++;
+      index++;
     }
     if (pathA.length < pathB.length) {
       return -1; // idA < idB

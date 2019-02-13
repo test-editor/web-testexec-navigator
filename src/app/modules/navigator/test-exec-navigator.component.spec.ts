@@ -1,10 +1,10 @@
 import { async, ComponentFixture, TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
 
-import { TestExecNavigatorComponent, EMPTY_TREE, UITestRunStatus } from './test-exec-navigator.component';
+import { TestExecNavigatorComponent, EMPTY_TREE } from './test-exec-navigator.component';
 import { TreeViewerModule, TreeNode } from '@testeditor/testeditor-commons';
 import { MessagingModule, MessagingService } from '@testeditor/messaging-service';
 import { TestCaseService, CallTreeNode, DefaultTestCaseService } from '../test-case-service/default-test-case.service';
-import { mock, instance, capture, anyString, when, resetCalls, verify, anything } from 'ts-mockito';
+import { mock, instance, anyString, when, resetCalls, verify } from 'ts-mockito';
 import { ExecutedCallTree, TestExecutionService, DefaultTestExecutionService } from '../test-execution-service/test-execution.service';
 import { TEST_NAVIGATION_SELECT, SNACKBAR_DISPLAY_NOTIFICATION, SnackbarMessage } from '../event-types-out';
 import { By } from '@angular/platform-browser';
@@ -211,16 +211,17 @@ describe('TestExecNavigatorComponent', () => {
       { name: 'child1',  children: [], id: '1234/5678/9/0' },
       { name: 'child2',  children: [] }
     ] });
-    component.selectedNode = component.treeNode.children[1];
     fixture.detectChanges();
+    component.treeNode.children[1].selectOnly();
+
 
     // when
     const items = fixture.debugElement.queryAll(By.css('.tree-view-item-key'));
     items[1].nativeElement.click(); // click 'child1'
 
     // then
-    expect(component.treeNode.children[1].selected).toBeFalsy();
-    expect(component.treeNode.children[0].selected).toBeTruthy();
+    expect(component.treeNode.children[1].selected).toBeFalsy('previous node remained selected');
+    expect(component.treeNode.children[0].selected).toBeTruthy('new node was not selected');
     expect(actualPayload).toEqual('1234/5678/9/0');
   });
 
