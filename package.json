@@ -95,9 +95,5 @@
     "tslint": "~5.9.1",
     "typescript": "~3.2.4",
     "zone.js": "^0.8.29"
-  },
-  "dependencies": {
-    "tslib": "^1.9.0",
-    "rxjs-compat": "^6.0.0-rc.0"
   }
 }

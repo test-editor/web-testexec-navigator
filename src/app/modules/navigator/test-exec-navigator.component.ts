@@ -2,7 +2,7 @@ import { Component, OnInit, Output, OnDestroy, isDevMode } from '@angular/core';
 import { CommonTreeNodeActions, TreeNode, TreeViewerKeyboardConfig, TREE_NODE_SELECTED } from '@testeditor/testeditor-commons';
 import { TestCaseService, CallTreeNode } from '../test-case-service/default-test-case.service';
 import { MessagingService } from '@testeditor/messaging-service';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 import {
   TestSuiteExecutionStatus, TestExecutionService,
   ExecutedCallTreeNode, ExecutedCallTree
