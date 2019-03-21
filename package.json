@@ -1,6 +1,6 @@
 {
   "name": "@testeditor/testexec-navigator",
-  "version": "0.4.25",
+  "version": "0.5.0",
   "description": "Angular component for the navigation of test execution call hierarchies.",
   "license": "EPL",
   "keywords": [
@@ -33,13 +33,13 @@
     "build": "ng build",
     "pretest": "yarn run upgradeTesteditorOrgDependencies",
     "test": "yarn run test:quick",
-    "test:quick": "ng test -sm=false --preserve-symlinks",
+    "test:quick": "ng test --source-map=false",
     "pretest:once": "yarn run upgradeTesteditorOrgDependencies",
-    "test:once": "ng test -sm=false --single-run --preserve-symlinks",
-    "test:once:quick": "ng test -sm=false --single-run --preserve-symlinks",
+    "test:once": "ng test --source-map=false --watch=false",
+    "test:once:quick": "ng test --source-map=false --watch=false",
     "lint": "ng lint",
     "pree2e": "webdriver-manager update --ignore_ssl --gecko=false",
-    "e2e": "ng e2e -wu false",
+    "e2e": "ng e2e --webdriver-update=false",
     "packagr": "ng-packagr -p ng-package.json",
     "postversion": "git push && git push --tags"
   },
@@ -51,15 +51,16 @@
   "peerDependencies": {
     "@angular/common": "^5.2.0",
     "@angular/core": "^5.2.0",
-    "@testeditor/messaging-service": "^1.4.0",
-    "@testeditor/testeditor-commons": "~0.5.0",
+    "@testeditor/messaging-service": "^1.5.0",
+    "@testeditor/testeditor-commons": "~0.6.0",
     "bootstrap": ">=4.1.2",
     "font-awesome": ">=4.0.0",
     "rxjs": "^5.5.0"
   },
   "devDependencies": {
+    "@angular-devkit/build-angular": "~0.13.0",
     "@angular/animations": "^5.2.0",
-    "@angular/cli": "^1.7.4",
+    "@angular/cli": "^7.3.6",
     "@angular/common": "^5.2.0",
     "@angular/compiler": "^5.2.0",
     "@angular/compiler-cli": "^5.2.0",
@@ -70,8 +71,8 @@
     "@angular/platform-browser": "^5.2.0",
     "@angular/platform-browser-dynamic": "^5.2.0",
     "@angular/router": "^5.2.0",
-    "@testeditor/messaging-service": "~1.4.0",
-    "@testeditor/testeditor-commons": "~0.5.0",
+    "@testeditor/messaging-service": "~1.5.0",
+    "@testeditor/testeditor-commons": "~0.6.0",
     "@types/jasmine": "~2.8.3",
     "@types/jasminewd2": "~2.0.2",
     "@types/node": "~9.6.6",
@@ -98,5 +99,7 @@
     "typescript": "~2.8.3",
     "zone.js": "^0.8.19"
   },
-  "dependencies": {}
+  "dependencies": {
+    "tslib": "^1.9.0"
+}
 }
