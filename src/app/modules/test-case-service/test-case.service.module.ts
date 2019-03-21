@@ -6,12 +6,6 @@ import { DefaultTestCaseService, TestCaseService, CallTreeNode } from './default
 @NgModule({
   imports: [
     CommonModule,
-  ],
-  declarations: [
-    DefaultTestCaseService, CallTreeNode
-  ],
-  exports: [
-    DefaultTestCaseService, CallTreeNode
   ]
 })
 export class TestCaseServiceModule {

@@ -6,12 +6,6 @@ import { TestExecutionService, DefaultTestExecutionService, ExecutedCallTree, Ex
 @NgModule({
   imports: [
     CommonModule,
-  ],
-  declarations: [
-    DefaultTestExecutionService, ExecutedCallTree, ExecutedCallTreeNode
-  ],
-  exports: [
-    DefaultTestExecutionService, ExecutedCallTree, ExecutedCallTreeNode
   ]
 })
 export class TestExecutionServiceModule {

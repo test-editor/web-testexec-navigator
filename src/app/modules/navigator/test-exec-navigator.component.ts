@@ -1,23 +1,16 @@
-import { Component, OnInit, Output, OnDestroy, isDevMode } from '@angular/core';
-import { CommonTreeNodeActions, TreeNode, TreeViewerKeyboardConfig, TREE_NODE_SELECTED } from '@testeditor/testeditor-commons';
-import { TestCaseService, CallTreeNode } from '../test-case-service/default-test-case.service';
+import { Component, isDevMode, OnDestroy, OnInit, Output } from '@angular/core';
 import { MessagingService } from '@testeditor/messaging-service';
+import { CommonTreeNodeActions, TreeNode, TreeViewerKeyboardConfig, TREE_NODE_SELECTED } from '@testeditor/testeditor-commons';
 import { Subscription } from 'rxjs';
-import {
-  TestSuiteExecutionStatus, TestExecutionService,
-  ExecutedCallTreeNode, ExecutedCallTree
-} from '../test-execution-service/test-execution.service';
-import { TestExecutionState } from '../test-execution-service/test-execution-state';
-import {
-  TEST_NAVIGATION_SELECT, TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED, TEST_EXECUTION_TREE_LOADED,
-  TestRunCompletedPayload, TEST_EXECUTION_FINISHED, TEST_EXECUTION_FAILED, SNACKBAR_DISPLAY_NOTIFICATION
-} from '../event-types-out';
-import {
-  TEST_EXECUTE_REQUEST, NAVIGATION_OPEN,
-  NavigationOpenPayload, TEST_SELECTED, TEST_CANCEL_REQUEST
-} from '../event-types-in';
-import { TestRunId } from './test-run-id';
+import { TEST_CANCEL_REQUEST, TEST_EXECUTE_REQUEST, TEST_SELECTED } from '../event-types-in';
+import { SNACKBAR_DISPLAY_NOTIFICATION, TestRunCompletedPayload, TEST_EXECUTION_FAILED, TEST_EXECUTION_FINISHED,
+  TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED, TEST_EXECUTION_TREE_LOADED, TEST_NAVIGATION_SELECT } from '../event-types-out';
 import { idPrefix } from '../module-constants';
+import { CallTreeNode, TestCaseService } from '../test-case-service/default-test-case.service';
+import { TestExecutionState } from '../test-execution-service/test-execution-state';
+import { ExecutedCallTree, ExecutedCallTreeNode, TestExecutionService,
+  TestSuiteExecutionStatus } from '../test-execution-service/test-execution.service';
+import { TestRunId } from './test-run-id';
 
 export const EMPTY_TREE = TreeNode.create({ name: '<empty>', children: [] });
 
@@ -39,14 +32,16 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
   readonly executeIcon = 'fa-play';
   readonly idPrefix = idPrefix;
 
-  private runCancelButtonClass = this.executeIcon;
   private executingTestResourceUrl: string = null;
   private treeNodeSelectedSubscription: Subscription;
   private testExecutionSubscription: Subscription;
   private testExecutionFailedSubscription: Subscription;
   private testCancelSubscription: Subscription;
   private testPathSelected: string = null;
-  private testRunList: UITestRun[] = [];
+
+  public runCancelButtonClass = this.executeIcon;
+  public testRunList: UITestRun[] = [];
+
   @Output() treeNode: TreeNode = EMPTY_TREE;
   @Output() treeConfig: TreeViewerKeyboardConfig = {
     onDoubleClick: (node) => node.expanded !== undefined ? node.expanded = !node.expanded : {},
