@@ -1,12 +1,8 @@
-import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-
-
+import { BrowserModule } from '@angular/platform-browser';
+import { MessagingModule } from '@testeditor/messaging-service';
 import { AppComponent } from './app.component';
 import { TestExecNavigatorModule } from './modules/navigator/test-exec-navigator.module';
-import { MessagingService, MessagingModule } from '@testeditor/messaging-service';
-import { HttpProviderService } from './modules/http-provider-service/http-provider.service';
-
 
 @NgModule({
   declarations: [

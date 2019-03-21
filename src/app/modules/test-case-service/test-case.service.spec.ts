@@ -1,11 +1,11 @@
-import { TestBed, inject, fakeAsync, tick } from '@angular/core/testing';
-
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { fakeAsync, inject, TestBed, tick } from '@angular/core/testing';
+import { MessagingModule, MessagingService } from '@testeditor/messaging-service';
+import { HttpProviderService } from '@testeditor/testeditor-commons';
 import { DefaultTestCaseService, TestCaseService } from './default-test-case.service';
 import { TestCaseServiceConfig } from './test-case.service.config';
-import { MessagingService, MessagingModule } from '@testeditor/messaging-service';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';
-import { HttpProviderService } from '../http-provider-service/http-provider.service';
+
 
 describe('TestCaseService', () => {
 

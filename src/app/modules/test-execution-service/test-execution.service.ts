@@ -1,10 +1,8 @@
-import { TestExecutionServiceConfig } from './test-execution.service.config';
-import { TestExecutionState } from './test-execution-state';
-import { HttpProviderService } from '../http-provider-service/http-provider.service';
-import { MessagingService } from '@testeditor/messaging-service';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { resource } from 'selenium-webdriver/http';
+import { HttpProviderService } from '@testeditor/testeditor-commons';
+import { TestExecutionState } from './test-execution-state';
+import { TestExecutionServiceConfig } from './test-execution.service.config';
 
 export class ExecutedCallTree {
   testSuiteId: string;

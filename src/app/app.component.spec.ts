@@ -1,8 +1,8 @@
-import { TestBed, async } from '@angular/core/testing';
-import { AppComponent } from './app.component';
+import { async, TestBed } from '@angular/core/testing';
 import { MessagingModule } from '@testeditor/messaging-service';
+import { HttpProviderService } from '@testeditor/testeditor-commons';
+import { AppComponent } from './app.component';
 import { TestExecNavigatorModule } from './modules/navigator/test-exec-navigator.module';
-import { HttpProviderService } from './modules/http-provider-service/http-provider.service';
 
 describe('AppComponent', () => {
   beforeEach(async(() => {

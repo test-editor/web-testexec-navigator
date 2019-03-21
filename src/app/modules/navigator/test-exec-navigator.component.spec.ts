@@ -1,18 +1,17 @@
-import { async, ComponentFixture, TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
-
-import { TestExecNavigatorComponent, EMPTY_TREE } from './test-exec-navigator.component';
-import { TreeViewerModule, TreeNode } from '@testeditor/testeditor-commons';
-import { MessagingModule, MessagingService } from '@testeditor/messaging-service';
-import { TestCaseService, CallTreeNode, DefaultTestCaseService } from '../test-case-service/default-test-case.service';
-import { mock, instance, anyString, when, resetCalls, verify } from 'ts-mockito';
-import { ExecutedCallTree, TestExecutionService, DefaultTestExecutionService } from '../test-execution-service/test-execution.service';
-import { TEST_NAVIGATION_SELECT, SNACKBAR_DISPLAY_NOTIFICATION, SnackbarMessage } from '../event-types-out';
-import { By } from '@angular/platform-browser';
-import { HttpProviderService } from '../http-provider-service/http-provider.service';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { TestExecutionState } from '../test-execution-service/test-execution-state';
+import { async, ComponentFixture, fakeAsync, flush, TestBed, tick } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { MessagingModule, MessagingService } from '@testeditor/messaging-service';
+import { HttpProviderService, TreeNode, TreeViewerModule } from '@testeditor/testeditor-commons';
+import { anyString, instance, mock, resetCalls, verify, when } from 'ts-mockito';
+import { SnackbarMessage, SNACKBAR_DISPLAY_NOTIFICATION, TEST_NAVIGATION_SELECT } from '../event-types-out';
 import { idPrefix } from '../module-constants';
+import { CallTreeNode, DefaultTestCaseService, TestCaseService } from '../test-case-service/default-test-case.service';
+import { TestExecutionState } from '../test-execution-service/test-execution-state';
+import { DefaultTestExecutionService, ExecutedCallTree, TestExecutionService } from '../test-execution-service/test-execution.service';
+import { EMPTY_TREE, TestExecNavigatorComponent } from './test-exec-navigator.component';
+
 
 describe('TestExecNavigatorComponent', () => {
   let component: TestExecNavigatorComponent;
@@ -406,7 +405,6 @@ describe('TestExecNavigatorComponent', () => {
       Promise.resolve({ resourceURL: executionUrl, status: TestExecutionState.Running }),
       new Promise((resolve) => setTimeout(() => resolve({ resourceURL: 'some', status: TestExecutionState.LastRunSuccessful }), 1))
     );
-    when(testExecutionServiceMock.terminate(anyString())).thenResolve();
     messagingService.publish('test.selected', testNode);
     tick(); fixture.detectChanges();
     runButton.click(); tick(); expect(component.testIsRunning()).toBeTruthy('precondition not met: test must be running');
