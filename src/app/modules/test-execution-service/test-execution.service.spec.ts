@@ -1,10 +1,10 @@
-import { TestExecutionService, DefaultTestExecutionService, ExecutedCallTree } from './test-execution.service';
-import { TestExecutionServiceConfig } from './test-execution.service.config';
-import { inject, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { fakeAsync, inject, TestBed, tick } from '@angular/core/testing';
 import { MessagingModule, MessagingService } from '@testeditor/messaging-service';
-import { HttpProviderService } from '../http-provider-service/http-provider.service';
+import { HttpProviderService } from '@testeditor/testeditor-commons';
+import { DefaultTestExecutionService, ExecutedCallTree, TestExecutionService } from './test-execution.service';
+import { TestExecutionServiceConfig } from './test-execution.service.config';
 
 export const HTTP_STATUS_OK = 200;
 export const HTTP_STATUS_CREATED = 201;

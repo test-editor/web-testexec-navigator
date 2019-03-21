@@ -1,8 +1,6 @@
+import { Injectable } from '@angular/core';
+import { HttpProviderService } from '@testeditor/testeditor-commons';
 import { TestCaseServiceConfig } from './test-case.service.config';
-import { Injectable, Injector } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { MessagingService } from '@testeditor/messaging-service';
-import { HttpProviderService } from '../http-provider-service/http-provider.service';
 
 // API provided by service backend
 export class CallTreeNode {

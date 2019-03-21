@@ -1,13 +1,11 @@
-import { NgModule, ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TestExecNavigatorComponent } from './test-exec-navigator.component';
-import { TestCaseServiceModule } from '../test-case-service/test-case.service.module';
+import { ModuleWithProviders, NgModule } from '@angular/core';
+import { HttpProviderService, TreeViewerModule } from '@testeditor/testeditor-commons';
 import { TestCaseServiceConfig } from '../test-case-service/test-case.service.config';
-import { TreeViewerModule } from '@testeditor/testeditor-commons';
-import { TestExecutionServiceModule } from '../test-execution-service/test-execution.service.module';
+import { TestCaseServiceModule } from '../test-case-service/test-case.service.module';
 import { TestExecutionServiceConfig } from '../test-execution-service/test-execution.service.config';
-import { HttpProviderService } from '../http-provider-service/http-provider.service';
-
+import { TestExecutionServiceModule } from '../test-execution-service/test-execution.service.module';
+import { TestExecNavigatorComponent } from './test-exec-navigator.component';
 @NgModule({
   imports: [
     CommonModule, TreeViewerModule
