@@ -405,7 +405,6 @@ describe('TestExecNavigatorComponent', () => {
       Promise.resolve({ resourceURL: executionUrl, status: TestExecutionState.Running }),
       new Promise((resolve) => setTimeout(() => resolve({ resourceURL: 'some', status: TestExecutionState.LastRunSuccessful }), 1))
     );
-    when(testExecutionServiceMock.terminate(anyString())).thenResolve();
     messagingService.publish('test.selected', testNode);
     tick(); fixture.detectChanges();
     runButton.click(); tick(); expect(component.testIsRunning()).toBeTruthy('precondition not met: test must be running');

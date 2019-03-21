@@ -33,10 +33,10 @@
     "build": "ng build",
     "pretest": "yarn run upgradeTesteditorOrgDependencies",
     "test": "yarn run test:quick",
-    "test:quick": "ng test --source-map=false",
+    "test:quick": "ng test",
     "pretest:once": "yarn run upgradeTesteditorOrgDependencies",
-    "test:once": "ng test --source-map=false --watch=false",
-    "test:once:quick": "ng test --source-map=false --watch=false",
+    "test:once": "ng test --watch=false",
+    "test:once:quick": "ng test --watch=false",
     "lint": "ng lint",
     "pree2e": "webdriver-manager update --ignore_ssl --gecko=false",
     "e2e": "ng e2e --webdriver-update=false",
@@ -45,7 +45,7 @@
   },
   "COMMENT_scripts_test": [
     "as described in issue https://github.com/angular/angular-cli/issues/7296",
-    "source maps have to be turned off for ng cli (-sm=false)",
+    "source maps have to be turned off for ng cli (--source-map=false)",
     "for legible error messages in some cases (e.g. html template access missing function)"
   ],
   "peerDependencies": {
