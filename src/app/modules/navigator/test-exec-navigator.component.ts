@@ -1,15 +1,13 @@
 import { Component, isDevMode, OnDestroy, OnInit, Output } from '@angular/core';
 import { MessagingService } from '@testeditor/messaging-service';
-import { CommonTreeNodeActions, TreeNode, TreeViewerKeyboardConfig, TREE_NODE_SELECTED } from '@testeditor/testeditor-commons';
+import { CommonTreeNodeActions, TreeNode, TreeNodeWithoutParentLinks, TreeViewerKeyboardConfig, TREE_NODE_SELECTED } from '@testeditor/testeditor-commons';
 import { Subscription } from 'rxjs';
 import { TEST_CANCEL_REQUEST, TEST_EXECUTE_REQUEST, TEST_SELECTED } from '../event-types-in';
-import { SNACKBAR_DISPLAY_NOTIFICATION, TestRunCompletedPayload, TEST_EXECUTION_FAILED, TEST_EXECUTION_FINISHED,
-  TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED, TEST_EXECUTION_TREE_LOADED, TEST_NAVIGATION_SELECT } from '../event-types-out';
+import { SNACKBAR_DISPLAY_NOTIFICATION, TestRunCompletedPayload, TEST_EXECUTION_FAILED, TEST_EXECUTION_FINISHED, TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED, TEST_EXECUTION_TREE_LOADED, TEST_NAVIGATION_SELECT } from '../event-types-out';
 import { idPrefix } from '../module-constants';
 import { CallTreeNode, TestCaseService } from '../test-case-service/default-test-case.service';
 import { TestExecutionState } from '../test-execution-service/test-execution-state';
-import { ExecutedCallTree, ExecutedCallTreeNode, TestExecutionService,
-  TestSuiteExecutionStatus } from '../test-execution-service/test-execution.service';
+import { ExecutedCallTree, ExecutedCallTreeNode, TestExecutionService, TestSuiteExecutionStatus } from '../test-execution-service/test-execution.service';
 import { TestRunId } from './test-run-id';
 
 export const EMPTY_TREE = TreeNode.create({ name: '<empty>', children: [] });
@@ -240,7 +238,6 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     this.setupTestSelectedListener();
   }
 
-  // TODO: handle all test runs as opposed to just the first one (i.e. iterate executedCallTree.testRuns as opposed to using element [0])
   async loadExecutedTreeFor(path: string, resourceURL: string, updateExecutionStatus?: boolean): Promise<void> {
     this.log('call backend for testexecution service');
     try {
@@ -252,7 +249,13 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       this.log('got executed tree node', executedTree);
       if (executedTree.testRuns) {
         if (updateExecutionStatus) {
-          executedTree.testRuns[0].children.forEach(child => this.updateExecutionStatus(child));
+
+          executedTree.testRuns
+          // cannot get flatMap / flat functions to compile with ng-packagr, so replaced it with map+reduce
+          // .flatMap((testRun) => testRun.children)
+            .map((testRun) => testRun.children)
+            .reduce((acc, val) => acc.concat(val), [])
+            .forEach(child => this.updateExecutionStatus(child));
         }
         this.treeNode = this.transformExecutionTree(executedTree, transformedCallTreeNode);
         this.treeNode.expanded = true;
