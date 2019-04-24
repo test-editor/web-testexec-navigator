@@ -352,14 +352,17 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
       } else if (executedCallTree.testRuns.length > 1) {
         rootID = new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId);
-        children = () => executedCallTree.testRuns.map(
-          (testrun) => this.testExecTreeNode(
+        children = () => executedCallTree.testRuns
+          .map((testrun) => (testrun.children || [])
+          .map(node => this.transformExecutionNode(node, callTree,
+            new TestRunId(rootID.testSuiteID, rootID.testSuiteRunID, testrun.testRunId)))
+        ).reduce((acc, val) => acc.concat(val), []);
+          /*this.testExecTreeNode(
             `Testrun[${testrun.testRunId}]: ` + executedCallTree.started,
             `Test Run: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}][${testrun.testRunId}]`,
             new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId, testrun.testRunId),
-            (runId) => (testrun.children || []).map(node => this.transformExecutionNode(node, callTree, runId))
-          )
-        );
+            (runId) => (testrun.children || []).map(node => this.transformExecutionNode(node, callTree, runId))*/
+
       }
     }
     return TreeNode.create(this.testExecTreeNode(name, hover, rootID, children));
