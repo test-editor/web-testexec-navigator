@@ -13,8 +13,8 @@ export class TestRunId {
     public readonly testRunID?: string,
     /** ID of a call tree node, e.g. a particular test step of the test referenced by the test run ID. */
     public readonly treeID?: string) {
-      if (!testSuiteID || !testSuiteRunID || !testRunID) {
-        throw new Error('Neither of Test Suite ID, Test Suite Run ID, and Test Run ID must be null or empty.');
+      if (!testSuiteID || !testSuiteRunID) {
+        throw new Error('Test suite id and test suite run id cannot be null or empty.');
       }
     }
 
