@@ -1,13 +1,16 @@
 import { Component, isDevMode, OnDestroy, OnInit, Output } from '@angular/core';
 import { MessagingService } from '@testeditor/messaging-service';
-import { CommonTreeNodeActions, TreeNode, TreeNodeWithoutParentLinks, TreeViewerKeyboardConfig, TREE_NODE_SELECTED } from '@testeditor/testeditor-commons';
+import { CommonTreeNodeActions, TreeNode, TreeNodeWithoutParentLinks, TreeViewerKeyboardConfig,
+  TREE_NODE_SELECTED } from '@testeditor/testeditor-commons';
 import { Subscription } from 'rxjs';
 import { TEST_CANCEL_REQUEST, TEST_EXECUTE_REQUEST, TEST_SELECTED } from '../event-types-in';
-import { SNACKBAR_DISPLAY_NOTIFICATION, TestRunCompletedPayload, TEST_EXECUTION_FAILED, TEST_EXECUTION_FINISHED, TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED, TEST_EXECUTION_TREE_LOADED, TEST_NAVIGATION_SELECT } from '../event-types-out';
+import { SNACKBAR_DISPLAY_NOTIFICATION, TestRunCompletedPayload, TEST_EXECUTION_FAILED, TEST_EXECUTION_FINISHED, TEST_EXECUTION_STARTED,
+  TEST_EXECUTION_START_FAILED, TEST_EXECUTION_TREE_LOADED, TEST_NAVIGATION_SELECT } from '../event-types-out';
 import { idPrefix } from '../module-constants';
 import { CallTreeNode, TestCaseService } from '../test-case-service/default-test-case.service';
 import { TestExecutionState } from '../test-execution-service/test-execution-state';
-import { ExecutedCallTree, ExecutedCallTreeNode, TestExecutionService, TestSuiteExecutionStatus } from '../test-execution-service/test-execution.service';
+import { ExecutedCallTree, ExecutedCallTreeNode, TestExecutionService,
+  TestSuiteExecutionStatus } from '../test-execution-service/test-execution.service';
 import { TestRunId } from './test-run-id';
 
 export const EMPTY_TREE = TreeNode.create({ name: '<empty>', children: [] });
@@ -336,27 +339,44 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     return result;
   }
 
-  // TODO: handle all test runs as opposed to just the first one (i.e. iterate executedCallTree.testRuns as opposed to using element [0])
   private transformExecutionTree(executedCallTree: ExecutedCallTree, callTree: TreeNode): TreeNode {
-    return this.createTestExecTreeNode(
-      'Testrun: ' + executedCallTree.started,
-      `Test Suite [Run]: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}]`,
-      executedCallTree.testRuns ? new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId, executedCallTree.testRuns[0].testRunId) : undefined,
-      (rootID) => (executedCallTree.testRuns[0].children || []).map(node => this.transformExecutionNode(node, callTree, rootID))
-    );
+    const name = 'Testrun: ' + executedCallTree.started;
+    const hover = `Test Suite [Run]: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}]`;
+
+    let rootID: TestRunId;
+    let children: (id: TestRunId) => TreeNodeWithoutParentLinks[] = () => [];
+    if (executedCallTree.testRuns) {
+      if (executedCallTree.testRuns.length === 1) {
+        rootID = new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId, executedCallTree.testRuns[0].testRunId);
+        children = (id) => (executedCallTree.testRuns[0].children || []).map(node => this.transformExecutionNode(node, callTree, id));
+
+      } else if (executedCallTree.testRuns.length > 1) {
+        rootID = new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId);
+        children = () => executedCallTree.testRuns.map(
+          (testrun) => this.testExecTreeNode(
+            `Testrun[${testrun.testRunId}]: ` + executedCallTree.started,
+            `Test Run: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}][${testrun.testRunId}]`,
+            new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId, testrun.testRunId),
+            (runId) => (testrun.children || []).map(node => this.transformExecutionNode(node, callTree, runId))
+          )
+        );
+      }
+    }
+    return TreeNode.create(this.testExecTreeNode(name, hover, rootID, children));
   }
 
-  private createTestExecTreeNode(name: string, hover: string, rootID: TestRunId, children: (rootID: TestRunId)=>TreeNodeWithoutParentLinks[]): TreeNode {
-    return TreeNode.create({
+  private testExecTreeNode(name: string, hover: string, rootID: TestRunId, children: (rootID: TestRunId) => TreeNodeWithoutParentLinks[]):
+    TreeNodeWithoutParentLinks {
+    return {
       name: name,
       expanded: true,
       children: children(rootID),
       collapsedCssClasses: 'fa-chevron-right',
       expandedCssClasses: 'fa-chevron-down',
       leafCssClasses: 'fa-folder',
-      id: rootID.toPathString(),
+      id: rootID ? rootID.toPathString() : '',
       hover: hover
-    });
+    };
   }
 
   private transformExecutionNode(executedCallTreeNode: ExecutedCallTreeNode,
@@ -422,7 +442,8 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     }
   }
 
-  private mergeChildTree(originalChildren: TreeNodeWithoutParentLinks[], childrenUpdate: TreeNodeWithoutParentLinks[]): TreeNodeWithoutParentLinks[] {
+  private mergeChildTree(originalChildren: TreeNodeWithoutParentLinks[], childrenUpdate: TreeNodeWithoutParentLinks[]):
+    TreeNodeWithoutParentLinks[] {
     if (originalChildren && originalChildren.length > childrenUpdate.length) {
       let originalChildIndex = 0;
       let executedChildIndex = 0;
