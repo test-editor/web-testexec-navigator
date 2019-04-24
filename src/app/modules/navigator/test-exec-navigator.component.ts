@@ -338,28 +338,30 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   // TODO: handle all test runs as opposed to just the first one (i.e. iterate executedCallTree.testRuns as opposed to using element [0])
   private transformExecutionTree(executedCallTree: ExecutedCallTree, callTree: TreeNode): TreeNode {
-    const result = TreeNode.create({
-      name: 'Testrun: ' + executedCallTree.started,
+    return this.createTestExecTreeNode(
+      'Testrun: ' + executedCallTree.started,
+      `Test Suite [Run]: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}]`,
+      executedCallTree.testRuns ? new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId, executedCallTree.testRuns[0].testRunId) : undefined,
+      (rootID) => (executedCallTree.testRuns[0].children || []).map(node => this.transformExecutionNode(node, callTree, rootID))
+    );
+  }
+
+  private createTestExecTreeNode(name: string, hover: string, rootID: TestRunId, children: (rootID: TestRunId)=>TreeNodeWithoutParentLinks[]): TreeNode {
+    return TreeNode.create({
+      name: name,
       expanded: true,
-      children: [], // initialized after root was set
+      children: children(rootID),
       collapsedCssClasses: 'fa-chevron-right',
       expandedCssClasses: 'fa-chevron-down',
       leafCssClasses: 'fa-folder',
-      id: '', // initialized later (see below)
-      hover: `Test Suite [Run]: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}]`
+      id: rootID.toPathString(),
+      hover: hover
     });
-    if (executedCallTree.testRuns) {
-      const rootID = new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId, executedCallTree.testRuns[0].testRunId);
-      result.id = rootID.toPathString();
-      result.children = (executedCallTree.testRuns[0].children || [])
-        .map(node => this.transformExecutionNode(node, callTree, rootID, result));
-    }
-    return result;
   }
 
   private transformExecutionNode(executedCallTreeNode: ExecutedCallTreeNode,
-    original: TreeNode, baseID: TestRunId, parent: TreeNode): TreeNode {
-    let originalChildren: TreeNode[];
+    original: TreeNodeWithoutParentLinks, baseID: TestRunId): TreeNodeWithoutParentLinks {
+    let originalChildren: TreeNodeWithoutParentLinks[];
 
     if (original) {
       originalChildren = original.children;
@@ -373,7 +375,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
     const id = new TestRunId(baseID.testSuiteID, baseID.testSuiteRunID, baseID.testRunID, executedCallTreeNode.id);
 
-    const result = TreeNode.create({
+    const result: TreeNodeWithoutParentLinks = {
       name: executedCallTreeNode.message,
       expanded: true,
       children: [],
@@ -382,10 +384,10 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       leafCssClasses: 'fa-folder',
       id: id.toPathString(),
       hover: this.hoverFor(executedCallTreeNode)
-    }, parent);
+    };
     result.children = this.mergeChildTree(originalChildren, (executedCallTreeNode.children || []).map(
       (node, index) => {
-        let originalNode: TreeNode;
+        let originalNode: TreeNodeWithoutParentLinks;
         if (originalChildren) {
           const treeNodeId = node.id.split('/').pop();
           const childIndex = originalChildren.findIndex((origChild) => this.compareTreeIds(treeNodeId, origChild.id) === 0);
@@ -393,7 +395,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
             originalNode = originalChildren[index];
           }
         }
-        return this.transformExecutionNode(node, originalNode, id, result);
+        return this.transformExecutionNode(node, originalNode, id);
       }));
 
     return result;
@@ -420,7 +422,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     }
   }
 
-  private mergeChildTree(originalChildren: TreeNode[], childrenUpdate: TreeNode[]): TreeNode[] {
+  private mergeChildTree(originalChildren: TreeNodeWithoutParentLinks[], childrenUpdate: TreeNodeWithoutParentLinks[]): TreeNodeWithoutParentLinks[] {
     if (originalChildren && originalChildren.length > childrenUpdate.length) {
       let originalChildIndex = 0;
       let executedChildIndex = 0;
