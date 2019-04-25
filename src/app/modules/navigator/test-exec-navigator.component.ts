@@ -1,10 +1,11 @@
 import { Component, isDevMode, OnDestroy, OnInit, Output } from '@angular/core';
 import { MessagingService } from '@testeditor/messaging-service';
-import { CommonTreeNodeActions, TreeNode, TreeViewerKeyboardConfig, TREE_NODE_SELECTED } from '@testeditor/testeditor-commons';
+import { CommonTreeNodeActions, TreeNode, TreeNodeWithoutParentLinks, TreeViewerKeyboardConfig,
+  TREE_NODE_SELECTED } from '@testeditor/testeditor-commons';
 import { Subscription } from 'rxjs';
 import { TEST_CANCEL_REQUEST, TEST_EXECUTE_REQUEST, TEST_SELECTED } from '../event-types-in';
-import { SNACKBAR_DISPLAY_NOTIFICATION, TestRunCompletedPayload, TEST_EXECUTION_FAILED, TEST_EXECUTION_FINISHED,
-  TEST_EXECUTION_STARTED, TEST_EXECUTION_START_FAILED, TEST_EXECUTION_TREE_LOADED, TEST_NAVIGATION_SELECT } from '../event-types-out';
+import { SNACKBAR_DISPLAY_NOTIFICATION, TestRunCompletedPayload, TEST_EXECUTION_FAILED, TEST_EXECUTION_FINISHED, TEST_EXECUTION_STARTED,
+  TEST_EXECUTION_START_FAILED, TEST_EXECUTION_TREE_LOADED, TEST_NAVIGATION_SELECT } from '../event-types-out';
 import { idPrefix } from '../module-constants';
 import { CallTreeNode, TestCaseService } from '../test-case-service/default-test-case.service';
 import { TestExecutionState } from '../test-execution-service/test-execution-state';
@@ -240,7 +241,6 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     this.setupTestSelectedListener();
   }
 
-  // TODO: handle all test runs as opposed to just the first one (i.e. iterate executedCallTree.testRuns as opposed to using element [0])
   async loadExecutedTreeFor(path: string, resourceURL: string, updateExecutionStatus?: boolean): Promise<void> {
     this.log('call backend for testexecution service');
     try {
@@ -252,7 +252,13 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       this.log('got executed tree node', executedTree);
       if (executedTree.testRuns) {
         if (updateExecutionStatus) {
-          executedTree.testRuns[0].children.forEach(child => this.updateExecutionStatus(child));
+
+          executedTree.testRuns
+          // cannot get flatMap / flat functions to compile with ng-packagr, so replaced it with map+reduce
+          // .flatMap((testRun) => testRun.children)
+            .map((testRun) => testRun.children)
+            .reduce((acc, val) => acc.concat(val), [])
+            .forEach(child => this.updateExecutionStatus(child));
         }
         this.treeNode = this.transformExecutionTree(executedTree, transformedCallTreeNode);
         this.treeNode.expanded = true;
@@ -333,30 +339,46 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     return result;
   }
 
-  // TODO: handle all test runs as opposed to just the first one (i.e. iterate executedCallTree.testRuns as opposed to using element [0])
   private transformExecutionTree(executedCallTree: ExecutedCallTree, callTree: TreeNode): TreeNode {
-    const result = TreeNode.create({
-      name: 'Testrun: ' + executedCallTree.started,
+    const name = 'Testrun: ' + executedCallTree.started;
+    const hover = `Test Suite [Run]: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}]`;
+
+    let rootID: TestRunId;
+    let children: (id: TestRunId) => TreeNodeWithoutParentLinks[] = () => [];
+    if (executedCallTree.testRuns) {
+      if (executedCallTree.testRuns.length === 1) {
+        rootID = new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId, executedCallTree.testRuns[0].testRunId);
+        children = (id) => (executedCallTree.testRuns[0].children || []).map(node => this.transformExecutionNode(node, callTree, id));
+
+      } else if (executedCallTree.testRuns.length > 1) {
+        rootID = new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId);
+        children = () => executedCallTree.testRuns
+          .map((testrun) => (testrun.children || [])
+          .map(node => this.transformExecutionNode(node, callTree,
+            new TestRunId(rootID.testSuiteID, rootID.testSuiteRunID, testrun.testRunId)))
+        ).reduce((acc, val) => acc.concat(val), []);
+      }
+    }
+    return TreeNode.create(this.testExecTreeNode(name, hover, rootID, children));
+  }
+
+  private testExecTreeNode(name: string, hover: string, rootID: TestRunId, children: (rootID: TestRunId) => TreeNodeWithoutParentLinks[]):
+    TreeNodeWithoutParentLinks {
+    return {
+      name: name,
       expanded: true,
-      children: [], // initialized after root was set
+      children: children(rootID),
       collapsedCssClasses: 'fa-chevron-right',
       expandedCssClasses: 'fa-chevron-down',
       leafCssClasses: 'fa-folder',
-      id: '', // initialized later (see below)
-      hover: `Test Suite [Run]: ${executedCallTree.testSuiteId}[${executedCallTree.testSuiteRunId}]`
-    });
-    if (executedCallTree.testRuns) {
-      const rootID = new TestRunId(executedCallTree.testSuiteId, executedCallTree.testSuiteRunId, executedCallTree.testRuns[0].testRunId);
-      result.id = rootID.toPathString();
-      result.children = (executedCallTree.testRuns[0].children || [])
-        .map(node => this.transformExecutionNode(node, callTree, rootID, result));
-    }
-    return result;
+      id: rootID ? rootID.toPathString() : '',
+      hover: hover
+    };
   }
 
   private transformExecutionNode(executedCallTreeNode: ExecutedCallTreeNode,
-    original: TreeNode, baseID: TestRunId, parent: TreeNode): TreeNode {
-    let originalChildren: TreeNode[];
+    original: TreeNodeWithoutParentLinks, baseID: TestRunId): TreeNodeWithoutParentLinks {
+    let originalChildren: TreeNodeWithoutParentLinks[];
 
     if (original) {
       originalChildren = original.children;
@@ -370,7 +392,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
     const id = new TestRunId(baseID.testSuiteID, baseID.testSuiteRunID, baseID.testRunID, executedCallTreeNode.id);
 
-    const result = TreeNode.create({
+    const result: TreeNodeWithoutParentLinks = {
       name: executedCallTreeNode.message,
       expanded: true,
       children: [],
@@ -379,10 +401,10 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
       leafCssClasses: 'fa-folder',
       id: id.toPathString(),
       hover: this.hoverFor(executedCallTreeNode)
-    }, parent);
+    };
     result.children = this.mergeChildTree(originalChildren, (executedCallTreeNode.children || []).map(
       (node, index) => {
-        let originalNode: TreeNode;
+        let originalNode: TreeNodeWithoutParentLinks;
         if (originalChildren) {
           const treeNodeId = node.id.split('/').pop();
           const childIndex = originalChildren.findIndex((origChild) => this.compareTreeIds(treeNodeId, origChild.id) === 0);
@@ -390,7 +412,7 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
             originalNode = originalChildren[index];
           }
         }
-        return this.transformExecutionNode(node, originalNode, id, result);
+        return this.transformExecutionNode(node, originalNode, id);
       }));
 
     return result;
@@ -417,7 +439,8 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
     }
   }
 
-  private mergeChildTree(originalChildren: TreeNode[], childrenUpdate: TreeNode[]): TreeNode[] {
+  private mergeChildTree(originalChildren: TreeNodeWithoutParentLinks[], childrenUpdate: TreeNodeWithoutParentLinks[]):
+    TreeNodeWithoutParentLinks[] {
     if (originalChildren && originalChildren.length > childrenUpdate.length) {
       let originalChildIndex = 0;
       let executedChildIndex = 0;
