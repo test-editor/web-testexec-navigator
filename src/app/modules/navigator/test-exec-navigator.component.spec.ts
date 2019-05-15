@@ -5,12 +5,13 @@ import { By } from '@angular/platform-browser';
 import { MessagingModule, MessagingService } from '@testeditor/messaging-service';
 import { HttpProviderService, TreeNode, TreeViewerModule } from '@testeditor/testeditor-commons';
 import { anyString, instance, mock, resetCalls, verify, when } from 'ts-mockito';
-import { SnackbarMessage, SNACKBAR_DISPLAY_NOTIFICATION, TEST_NAVIGATION_SELECT } from '../event-types-out';
+import { SnackbarMessage, SNACKBAR_DISPLAY_NOTIFICATION, TEST_NAVIGATION_SELECT, TEST_EXECUTION_TREE_LOADED } from '../event-types-out';
 import { idPrefix } from '../module-constants';
 import { CallTreeNode, DefaultTestCaseService, TestCaseService } from '../test-case-service/default-test-case.service';
 import { TestExecutionState } from '../test-execution-service/test-execution-state';
-import { DefaultTestExecutionService, ExecutedCallTree, TestExecutionService } from '../test-execution-service/test-execution.service';
+import { DefaultTestExecutionService, ExecutedCallTree, TestExecutionService, TestSuiteExecutionStatus } from '../test-execution-service/test-execution.service';
 import { EMPTY_TREE, TestExecNavigatorComponent } from './test-exec-navigator.component';
+import { TEST_SELECTED, TEST_EXECUTE_REQUEST } from '../event-types-in';
 
 
 describe('TestExecNavigatorComponent', () => {
@@ -19,6 +20,71 @@ describe('TestExecNavigatorComponent', () => {
   let fixture: ComponentFixture<TestExecNavigatorComponent>;
   const testCaseServiceMock = mock(DefaultTestCaseService);
   const testExecutionServiceMock = mock(DefaultTestExecutionService);
+
+  function executedTreeSample(): ExecutedCallTree {
+    return {
+      'testSuiteId': '0',
+      'testSuiteRunId': '0',
+      'resourcePaths': [],
+      'testRuns': [{
+         'source': 'org/testeditor/Minimal',
+         'testRunId': '1',
+         'commitId': '',
+         'started': '2018-06-14T12:52:48.327Z',
+         'children': [{
+           'id': 'IDROOT',
+           'node': 'TEST',
+           'enter': '1234',
+           'message': 'some',
+           'children': [
+            {
+              'id': 'ID0',
+              'node': 'SPEC',
+              'enter': '2345',
+              'message': 'real first',
+              'preVariables': {
+                'var': 'val'
+              },
+              'leave': '2346',
+              'status': 'OK'
+            },
+            {
+              'id': 'ID1',
+              'node': 'SPEC',
+              'enter': '2346',
+              'message': 'real other',
+              'assertionError': 'some error message',
+              'exception': 'some exception message',
+              'fixtureException': {
+                'some key': [ 42, 48 ],
+                'otherKey': 'Hello'
+              }
+            },
+          ],
+        'leave': '1235',
+        'status': 'ERROR'
+      }]
+     }]
+    };
+  }
+
+  function expectedTreeSample(): CallTreeNode {
+    return {
+      displayName: 'some',
+      treeId: 'ID',
+      children: [
+        { displayName: 'first',
+          treeId: 'IDROOT',
+          children: [] },
+        { displayName: 'other',
+          treeId: 'ID0',
+          children: [] },
+        { displayName: 'still another',
+          treeId: 'ID1',
+          children: [] }
+      ]
+    };
+  }
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
@@ -76,66 +142,8 @@ describe('TestExecNavigatorComponent', () => {
   it('should provide transformed call tree merged with static call tree from backend (in case of errors during test execution)',
      fakeAsync(async () => {
        // given
-       const executedTree: ExecutedCallTree = {
-         'testSuiteId': '0',
-         'testSuiteRunId': '0',
-         'resourcePaths': [],
-         'testRuns': [{
-            'source': 'org/testeditor/Minimal',
-            'testRunId': '1',
-            'commitId': '',
-            'started': '2018-06-14T12:52:48.327Z',
-            'children': [{
-              'id': 'IDROOT',
-              'node': 'TEST',
-              'enter': '1234',
-              'message': 'some',
-              'children': [
-               {
-                 'id': 'ID0',
-                 'node': 'SPEC',
-                 'enter': '2345',
-                 'message': 'real first',
-                 'preVariables': {
-                   'var': 'val'
-                 },
-                 'leave': '2346',
-                 'status': 'OK'
-               },
-               {
-                 'id': 'ID1',
-                 'node': 'SPEC',
-                 'enter': '2346',
-                 'message': 'real other',
-                 'assertionError': 'some error message',
-                 'exception': 'some exception message',
-                 'fixtureException': {
-                   'some key': [ 42, 48 ],
-                   'otherKey': 'Hello'
-                 }
-               },
-             ],
-           'leave': '1235',
-           'status': 'ERROR'
-         }]
-        }]
-       };
-
-       const expectedTree: CallTreeNode = {
-         displayName: 'some',
-         treeId: 'ID',
-         children: [
-           { displayName: 'first',
-             treeId: 'IDROOT',
-             children: [] },
-           { displayName: 'other',
-             treeId: 'ID0',
-             children: [] },
-           { displayName: 'still another',
-             treeId: 'ID1',
-             children: [] }
-         ]
-       };
+       const executedTree = executedTreeSample();
+       const expectedTree = expectedTreeSample();
 
        when(testCaseServiceMock.getCallTree(anyString())).thenReturn(Promise.resolve(expectedTree));
        when(testExecutionServiceMock.getCallTree(anyString())).thenReturn(Promise.resolve(executedTree));
@@ -590,4 +598,52 @@ describe('TestExecNavigatorComponent', () => {
     // then
     expect(window.getComputedStyle(testRunDropdown).opacity).toEqual('1');
   });
+
+  it('sends the TEST_EXECUTION_TREE_LOADED event when a tree was loaded after TEST_SELECTED is received', fakeAsync(() => {
+    // given
+    const testFile = 'src/test/java/some/Test.tcl';
+    let eventReceived = false;
+    const subscription = messagingService.subscribe(TEST_EXECUTION_TREE_LOADED, () => {
+      console.log('event received!');
+      eventReceived = true;
+    });
+
+    when(testCaseServiceMock.getCallTree(anyString())).thenReturn(Promise.resolve(expectedTreeSample()));
+    when(testExecutionServiceMock.getCallTree(anyString())).thenReturn(Promise.resolve(executedTreeSample()));
+
+    // when
+    console.log('publishing event...');
+    messagingService.publish(TEST_SELECTED,  { id: testFile });
+    console.log('event published.');
+    flush();
+    console.log('fake async queue flushed.');
+
+    // then
+    expect(eventReceived).toBeTruthy();
+    subscription.unsubscribe();
+  }));
+
+  it('does not send the TEST_EXECUTION_TREE_LOADED event when the status of a running test is updated', fakeAsync(() => {
+    // given
+    const testFile = 'src/test/java/some/Test.tcl';
+    let eventReceived = false;
+    when(testCaseServiceMock.getCallTree(anyString())).thenReturn(Promise.resolve(expectedTreeSample()));
+    when(testExecutionServiceMock.getCallTree(anyString())).thenReturn(Promise.resolve(executedTreeSample()));
+    messagingService.publish(TEST_SELECTED, { id: testFile });
+    tick();
+
+    when(testExecutionServiceMock.execute(anyString())).thenResolve('someUrl');
+    when(testExecutionServiceMock.getStatus(anyString()))
+      .thenResolve({resourceURL: '', status: TestExecutionState.Running})
+      .thenResolve({resourceURL: '', status: TestExecutionState.LastRunSuccessful});
+    const subscription = messagingService.subscribe(TEST_EXECUTION_TREE_LOADED, () => eventReceived = true);
+
+    // when
+    messagingService.publish(TEST_EXECUTE_REQUEST, testFile);
+    tick();
+
+    // then
+    expect(eventReceived).toBeFalsy();
+    subscription.unsubscribe();
+  }));
 });
