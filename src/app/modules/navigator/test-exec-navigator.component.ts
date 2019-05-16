@@ -263,7 +263,6 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
         this.treeNode = this.transformExecutionTree(executedTree, transformedCallTreeNode);
         this.treeNode.expanded = true;
         this.treeNode.children.forEach(child => this.updateExpansionStatus(child));
-        this.messagingService.publish(TEST_EXECUTION_TREE_LOADED, {});
       }
     } catch (error) {
       this.log('ERROR', error);
