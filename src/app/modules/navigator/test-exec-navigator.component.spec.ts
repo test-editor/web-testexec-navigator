@@ -9,7 +9,8 @@ import { SnackbarMessage, SNACKBAR_DISPLAY_NOTIFICATION, TEST_NAVIGATION_SELECT,
 import { idPrefix } from '../module-constants';
 import { CallTreeNode, DefaultTestCaseService, TestCaseService } from '../test-case-service/default-test-case.service';
 import { TestExecutionState } from '../test-execution-service/test-execution-state';
-import { DefaultTestExecutionService, ExecutedCallTree, TestExecutionService, TestSuiteExecutionStatus } from '../test-execution-service/test-execution.service';
+import { DefaultTestExecutionService, ExecutedCallTree, TestExecutionService,
+  TestSuiteExecutionStatus } from '../test-execution-service/test-execution.service';
 import { EMPTY_TREE, TestExecNavigatorComponent } from './test-exec-navigator.component';
 import { TEST_SELECTED, TEST_EXECUTE_REQUEST } from '../event-types-in';
 
