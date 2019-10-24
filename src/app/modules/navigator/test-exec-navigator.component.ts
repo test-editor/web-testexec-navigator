@@ -198,7 +198,15 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
 
   async testExecutionWatcher(testId: string, tclPath: string): Promise<TestSuiteExecutionStatus> {
     let suiteStatus: TestSuiteExecutionStatus;
-    let executionStatus = TestExecutionState.Running;
+    let executionStatus = TestExecutionState.Idle;
+    while (executionStatus === TestExecutionState.Idle) {
+      this.log('polling test status from', testId);
+      suiteStatus = await this.testExecutionService.getStatus(testId);
+      this.log('got status', suiteStatus);
+      executionStatus = suiteStatus.status;
+      this.log('updating execution tree');
+      await this.loadExecutedTreeFor(tclPath, testId);
+    }
     while (executionStatus === TestExecutionState.Running) {
       this.log('polling test status from', testId);
       suiteStatus = await this.testExecutionService.getStatus(testId);
@@ -222,7 +230,9 @@ export class TestExecNavigatorComponent implements OnInit, OnDestroy {
         break;
       }
       default: {
-        this.log('ERROR: test execution ended neither successful nor did it fail', suiteStatus);
+        const errorMessage = 'test execution ended neither successful nor did it fail';
+        this.log(`ERROR: ${errorMessage}`, suiteStatus);
+        throw new Error(errorMessage);
       }
     }
     return suiteStatus;

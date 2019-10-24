@@ -323,6 +323,46 @@ describe('TestExecNavigatorComponent', () => {
     expect(component.switchToTestCurrentlyRunningStatus).toHaveBeenCalled();
   }));
 
+  it('receiving idle before test started keeps test running', async(() => {
+    // given
+    when(testExecutionServiceMock.getStatus(anyString())).thenReturn(
+      Promise. resolve({ resourceURL: 'some', status: TestExecutionState.Idle }),
+      Promise. resolve({ resourceURL: 'some', status: TestExecutionState.Idle }),
+      Promise. resolve({ resourceURL: 'some', status: TestExecutionState.Idle }),
+      Promise. resolve({ resourceURL: 'some', status: TestExecutionState.Running }),
+      Promise. resolve({ resourceURL: 'some', status: TestExecutionState.LastRunSuccessful })
+    );
+
+    // when
+    component.testExecutionWatcher('theTestId', '/path/to/test.tcl')
+
+    // then
+    .then((actualStatus) => {
+      expect(actualStatus.status).toEqual(TestExecutionState.LastRunSuccessful);
+    });
+  }));
+
+  it('receiving idle after test started throws an error', async(() => {
+    // given
+    when(testExecutionServiceMock.getStatus(anyString())).thenReturn(
+      Promise. resolve({ resourceURL: 'some', status: TestExecutionState.Idle }),
+      Promise. resolve({ resourceURL: 'some', status: TestExecutionState.Idle }),
+      Promise. resolve({ resourceURL: 'some', status: TestExecutionState.Running }),
+      Promise. resolve({ resourceURL: 'some', status: TestExecutionState.Idle }),
+      Promise. resolve({ resourceURL: 'some', status: TestExecutionState.LastRunSuccessful })
+    );
+
+    // when
+    component.testExecutionWatcher('theTestId', '/path/to/test.tcl')
+
+    // then
+    .then((status) => {
+      fail(`expected exception but got ${status}`);
+    }, (error) => {
+      expect(error.message).toEqual('test execution ended neither successful nor did it fail');
+    });
+  }));
+
   it('keeps button enabled for cancelling if a test execution was started', fakeAsync(() => {
     // given
     const runButton = fixture.debugElement.queryAll(By.css('button[id=' + idPrefix + 'icon-run]'))[0].nativeElement;
